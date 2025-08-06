@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MinLength, IsBoolean, IsNumber } from 'class-validator';
+import { IsOptional, IsString, MinLength, IsBoolean, IsNumber, IsIn } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class StockItem {
@@ -19,7 +19,7 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsString()
-  model_name: string;
+  type_id: string;
 
   @Transform(({ value }) => Number(value))
   @IsNumber()
@@ -41,10 +41,14 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsString()
-  brand_name: string;
+  brand_id: string;
 
   @IsOptional()
   @Transform(({ value }) => Number(value))
   @IsNumber()
   discount: number;
+
+  @IsOptional()
+  @IsString()
+  gender_id: string;
 }

@@ -16,11 +16,12 @@ export class CategoryService {
     private readonly sizeModel: Model<Size>
   ) {}
 
-  async create(createCategoryDto: CreateCategoryDto) {
+  async create(tenantId: string, createCategoryDto: CreateCategoryDto) {
     try {
       const categoryData = {
         ...createCategoryDto,
-        name: createCategoryDto.name?.toUpperCase()
+        name: createCategoryDto.name?.toUpperCase(),
+        tenantId
       };
       const category = await this.categoryModel.create(categoryData);
       return category;
@@ -32,18 +33,18 @@ export class CategoryService {
     }
   }
 
-  async findAll() {
+  async findAll(tenantId: string) {
     try {
-      const categories = await this.categoryModel.find().sort({ name: 1 });
+      const categories = await this.categoryModel.find({ tenantId }).sort({ name: 1 });
       return categories;
     } catch (error) {
       throw new BadRequestException('Error al obtener las categorías: ' + error.message);
     }
   }
 
-  async findOne(id: string) {
+  async findOne(tenantId: string, id: string) {
     try {
-      const category = await this.categoryModel.findById(id);
+      const category = await this.categoryModel.findOne({ _id: id, tenantId });
       
       if (!category) {
         throw new NotFoundException('Categoría no encontrada');
@@ -58,14 +59,14 @@ export class CategoryService {
     }
   }
 
-  async update(id: string, updateCategoryDto: UpdateCategoryDto) {
+  async update(tenantId: string, id: string, updateCategoryDto: UpdateCategoryDto) {
     try {
       const updateData = {
         ...updateCategoryDto,
         name: updateCategoryDto.name?.toUpperCase()
       };
-      const category = await this.categoryModel.findByIdAndUpdate(
-        id,
+      const category = await this.categoryModel.findOneAndUpdate(
+        { _id: id, tenantId },
         updateData,
         { new: true }
       );
@@ -86,20 +87,20 @@ export class CategoryService {
     }
   }
 
-  async remove(id: string) {
+  async remove(tenantId: string, id: string) {
     try {
       // Verificar que la categoría existe
-      const category = await this.categoryModel.findById(id);
+      const category = await this.categoryModel.findOne({ _id: id, tenantId });
       
       if (!category) {
         throw new NotFoundException('Categoría no encontrada');
       }
 
       // Eliminar todas las tallas asociadas a esta categoría
-      const deletedSizes = await this.sizeModel.deleteMany({ category_id: id });
+      const deletedSizes = await this.sizeModel.deleteMany({ category_id: id, tenantId });
       
       // Eliminar la categoría
-      await this.categoryModel.findByIdAndDelete(id);
+      await this.categoryModel.findOneAndDelete({ _id: id, tenantId });
       
       return { 
         message: 'Categoría eliminada exitosamente', 

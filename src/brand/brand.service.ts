@@ -13,11 +13,12 @@ export class BrandService {
     private readonly brandModel: Model<Brand>
   ) {}
 
-  async create(createBrandDto: CreateBrandDto) {
+  async create(tenantId: string, createBrandDto: CreateBrandDto) {
     try {
       const brandData = {
         ...createBrandDto,
-        name: createBrandDto.name?.toUpperCase()
+        name: createBrandDto.name?.toUpperCase(),
+        tenantId
       };
       const brand = await this.brandModel.create(brandData);
       return brand;
@@ -29,18 +30,18 @@ export class BrandService {
     }
   }
 
-  async findAll() {
+  async findAll(tenantId: string) {
     try {
-      const brands = await this.brandModel.find().sort({ name: 1 });
+      const brands = await this.brandModel.find({ tenantId }).sort({ name: 1 });
       return brands;
     } catch (error) {
       throw new BadRequestException('Error al obtener las marcas: ' + error.message);
     }
   }
 
-  async findOne(id: string) {
+  async findOne(tenantId: string, id: string) {
     try {
-      const brand = await this.brandModel.findById(id);
+      const brand = await this.brandModel.findOne({ _id: id, tenantId });
       
       if (!brand) {
         throw new NotFoundException('Marca no encontrada');
@@ -55,14 +56,14 @@ export class BrandService {
     }
   }
 
-  async update(id: string, updateBrandDto: UpdateBrandDto) {
+  async update(tenantId: string, id: string, updateBrandDto: UpdateBrandDto) {
     try {
       const updateData = {
         ...updateBrandDto,
         name: updateBrandDto.name?.toUpperCase()
       };
-      const brand = await this.brandModel.findByIdAndUpdate(
-        id,
+      const brand = await this.brandModel.findOneAndUpdate(
+        { _id: id, tenantId },
         updateData,
         { new: true }
       );
@@ -83,9 +84,9 @@ export class BrandService {
     }
   }
 
-  async remove(id: string) {
+  async remove(tenantId: string, id: string) {
     try {
-      const brand = await this.brandModel.findByIdAndDelete(id);
+      const brand = await this.brandModel.findOneAndDelete({ _id: id, tenantId });
       
       if (!brand) {
         throw new NotFoundException('Marca no encontrada');
