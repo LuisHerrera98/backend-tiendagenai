@@ -1,0 +1,65 @@
+name: Deploy Backend TiendaGenAI
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        port: 22
+        script: |
+          echo "=== Iniciando deploy backend TiendaGenAI ==="
+          
+          # Cargar NVM
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          
+          # Navegar al directorio del proyecto
+          cd /home/ubuntu/projects/tiendagenai/backend-tiendagenai
+          
+          echo "=== Verificando comandos ==="
+          /home/ubuntu/.nvm/versions/node/v22.17.0/bin/node --version
+          /home/ubuntu/.nvm/versions/node/v22.17.0/bin/npm --version
+          /home/ubuntu/.nvm/versions/node/v22.17.0/bin/pm2 --version
+          
+          echo "=== Haciendo git pull ==="
+          git pull origin main
+          
+          echo "=== Memoria disponible antes de npm install ==="
+          free -h
+          
+          echo "=== Instalando dependencias ==="
+          /home/ubuntu/.nvm/versions/node/v22.17.0/bin/npm install
+          
+          echo "=== Construyendo proyecto ==="
+          NODE_OPTIONS="--max-old-space-size=1024" /home/ubuntu/.nvm/versions/node/v22.17.0/bin/npm run build
+          
+          echo "=== Deploy sin downtime ==="
+          if /home/ubuntu/.nvm/versions/node/v22.17.0/bin/pm2 list | grep -q "backend-tiendagenai"; then
+            echo "Proceso existente encontrado - Reload sin downtime"
+            /home/ubuntu/.nvm/versions/node/v22.17.0/bin/pm2 reload backend-tiendagenai
+          else
+            echo "Proceso no existe - Iniciando nuevo"
+            /home/ubuntu/.nvm/versions/node/v22.17.0/bin/pm2 start --name backend-tiendagenai "npm start"
+          fi
+          
+          echo "=== Guardando configuración PM2 ==="
+          /home/ubuntu/.nvm/versions/node/v22.17.0/bin/pm2 save
+          
+          echo "=== Estado actual de PM2 ==="
+          /home/ubuntu/.nvm/versions/node/v22.17.0/bin/pm2 list
+          
+          echo "=== Memoria después del deploy ==="
+          free -h
+          
+          echo "=== Deploy backend completado ==="
