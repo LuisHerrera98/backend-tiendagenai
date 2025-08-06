@@ -16,6 +16,7 @@ import { ClientCreditModule } from './client-credit/client-credit.module';
 import { AuthModule } from './auth/auth.module';
 import { TenantModule } from './tenant/tenant.module';
 import { UserModule } from './user/user.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { UserModule } from './user/user.module';
     MongooseModule.forRoot(
       'mongodb+srv://Lucho:mision2017@db-trendsneakers.bday4jw.mongodb.net/ecommerce-test',
     ),
+    HealthModule,
     TenantModule,
     AuthModule,
     UserModule,

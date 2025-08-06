@@ -24,6 +24,16 @@ jobs:
           export NVM_DIR="$HOME/.nvm"
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           
+          # Crear directorio de proyectos si no existe
+          mkdir -p /home/ubuntu/projects/tiendagenai
+          
+          # Verificar si existe el proyecto, si no clonarlo
+          if [ ! -d "/home/ubuntu/projects/tiendagenai/backend-tiendagenai" ]; then
+            echo "=== Clonando proyecto backend TiendaGenAI ==="
+            cd /home/ubuntu/projects/tiendagenai
+            git clone https://github.com/${{ github.repository }}.git backend-tiendagenai
+          fi
+          
           # Navegar al directorio del proyecto
           cd /home/ubuntu/projects/tiendagenai/backend-tiendagenai
           
@@ -40,6 +50,22 @@ jobs:
           
           echo "=== Instalando dependencias ==="
           /home/ubuntu/.nvm/versions/node/v22.17.0/bin/npm install
+          
+          echo "=== Creando archivo .env ==="
+          cat > .env << EOF
+          NODE_ENV=production
+          PORT=3000
+          MONGODB_URI=${{ secrets.MONGODB_URI }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }}
+          CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+          EMAIL_USER=${{ secrets.EMAIL_USER }}
+          EMAIL_PASS=${{ secrets.EMAIL_PASS }}
+          FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+          DOMAIN=tiendagenai.com
+          EOF
           
           echo "=== Construyendo proyecto ==="
           NODE_OPTIONS="--max-old-space-size=1024" /home/ubuntu/.nvm/versions/node/v22.17.0/bin/npm run build

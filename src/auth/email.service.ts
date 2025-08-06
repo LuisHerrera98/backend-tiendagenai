@@ -22,7 +22,7 @@ export class EmailService {
     const verificationUrl = `${this.configService.get('FRONTEND_URL') || 'http://localhost:3001'}/auth/verify-email?token=${token}`;
 
     const mailOptions = {
-      from: '"Tu Tienda Online" <noreply@tutienda.com>',
+      from: '"TiendaGenAI" <genai.for.business.sa@gmail.com>',
       to: email,
       subject: 'Verifica tu cuenta - Tu Tienda Online',
       html: `
@@ -73,7 +73,7 @@ export class EmailService {
     const resetUrl = `${this.configService.get('FRONTEND_URL') || 'http://localhost:3001'}/auth/reset-password?token=${token}`;
 
     const mailOptions = {
-      from: '"Tu Tienda Online" <noreply@tutienda.com>',
+      from: '"TiendaGenAI" <genai.for.business.sa@gmail.com>',
       to: email,
       subject: 'Restablecer contraseña - Tu Tienda Online',
       html: `
@@ -117,7 +117,7 @@ export class EmailService {
 
   async sendVerificationCode(email: string, code: string, subdomain: string) {
     const mailOptions = {
-      from: '"TiendaGenAI" <noreply@tiendagenai.com>',
+      from: '"TiendaGenAI" <genai.for.business.sa@gmail.com>',
       to: email,
       subject: 'Código de verificación - TiendaGenAI',
       html: `
@@ -164,11 +164,11 @@ export class EmailService {
   }
 
   async sendWelcomeEmail(email: string, storeName: string, subdomain: string) {
-    const storeUrl = `https://${subdomain}.${this.configService.get('DOMAIN') || 'tutienda.com'}`;
-    const adminUrl = `https://${subdomain}.${this.configService.get('DOMAIN') || 'tutienda.com'}/admin`;
+    const storeUrl = `https://${subdomain}.tiendagenai.com`;
+    const adminUrl = `https://tiendagenai.com/admin`;
 
     const mailOptions = {
-      from: '"Tu Tienda Online" <noreply@tutienda.com>',
+      from: '"TiendaGenAI" <genai.for.business.sa@gmail.com>',
       to: email,
       subject: `¡${storeName} está lista! - Tu Tienda Online`,
       html: `
