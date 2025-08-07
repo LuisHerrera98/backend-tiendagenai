@@ -101,7 +101,7 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
-    const user = await this.userModel.findOne({ email }).populate('tenantIds currentTenantId');
+    const user = await this.userModel.findOne({ email });
     if (!user) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
@@ -135,7 +135,7 @@ export class AuthService {
       sub: user._id,
       email: user.email,
       role: user.role,
-      currentTenantId: user.currentTenantId,
+      currentTenantId: user.currentTenantId ? user.currentTenantId.toString() : null,
       tenantIds: user.tenantIds,
       name: user.name,
     };
@@ -329,7 +329,7 @@ export class AuthService {
       sub: user._id,
       email: user.email,
       role: user.role,
-      currentTenantId: user.currentTenantId,
+      currentTenantId: user.currentTenantId ? user.currentTenantId.toString() : null,
       tenantIds: user.tenantIds,
       name: user.name,
     };
