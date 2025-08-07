@@ -47,7 +47,10 @@ export class SizeService {
 
   async findAll(tenantId: string) {
     try {
-      const sizes = await this.sizeModel.find({ tenantId }).sort({ name: 1 });
+      const sizes = await this.sizeModel
+        .find({ tenantId })
+        .populate('category_id', 'name')
+        .sort({ name: 1 });
       return sizes;
     } catch (error) {
       throw new BadRequestException('Error al obtener las tallas: ' + error.message);
@@ -56,7 +59,10 @@ export class SizeService {
 
   async findAllByCategory(tenantId: string, categoryId: string) {
     try {
-      const sizes = await this.sizeModel.find({ category_id: categoryId, tenantId }).sort({ name: 1 });
+      const sizes = await this.sizeModel
+        .find({ category_id: categoryId, tenantId })
+        .populate('category_id', 'name')
+        .sort({ name: 1 });
       return sizes;
     } catch (error) {
       throw new BadRequestException('Error al obtener las tallas por categoría: ' + error.message);
