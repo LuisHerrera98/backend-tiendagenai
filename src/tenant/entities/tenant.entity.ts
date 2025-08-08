@@ -54,6 +54,13 @@ export class Tenant {
     language?: string;
     enableWhatsapp?: boolean;
     whatsappNumber?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    whatsapp?: string;
+    whatsappEnabled?: boolean;
+    instagram?: string;
+    facebook?: string;
   };
 
   @Prop({ type: String })

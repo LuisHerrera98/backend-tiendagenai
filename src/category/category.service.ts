@@ -27,7 +27,11 @@ export class CategoryService {
       return category;
     } catch (error) {
       if (error.code === 11000) {
-        throw new BadRequestException('Ya existe una categoría con ese nombre');
+        throw new BadRequestException({
+          message: 'Ya existe una categoría con ese nombre',
+          error: 'DUPLICATE_CATEGORY',
+          statusCode: 400
+        });
       }
       throw new BadRequestException('Error al crear la categoría: ' + error.message);
     }
@@ -81,7 +85,11 @@ export class CategoryService {
         throw error;
       }
       if (error.code === 11000) {
-        throw new BadRequestException('Ya existe una categoría con ese nombre');
+        throw new BadRequestException({
+          message: 'Ya existe una categoría con ese nombre',
+          error: 'DUPLICATE_CATEGORY',
+          statusCode: 400
+        });
       }
       throw new BadRequestException('Error al actualizar la categoría: ' + error.message);
     }

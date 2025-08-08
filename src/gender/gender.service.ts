@@ -13,34 +13,39 @@ export class GenderService {
     private readonly genderModel: Model<Gender>
   ) {}
 
-  async create(createGenderDto: CreateGenderDto) {
+  async create(tenantId: string, createGenderDto: CreateGenderDto) {
     try {
       const genderData = {
         ...createGenderDto,
-        name: createGenderDto.name?.toUpperCase()
+        name: createGenderDto.name?.toUpperCase(),
+        tenantId
       };
       const gender = await this.genderModel.create(genderData);
       return gender;
     } catch (error) {
       if (error.code === 11000) {
-        throw new BadRequestException('Ya existe un género con ese nombre');
+        throw new BadRequestException({
+          message: 'Ya existe un género con ese nombre',
+          error: 'DUPLICATE_GENDER',
+          statusCode: 400
+        });
       }
       throw new BadRequestException('Error al crear el género: ' + error.message);
     }
   }
 
-  async findAll() {
+  async findAll(tenantId: string) {
     try {
-      const genders = await this.genderModel.find().sort({ name: 1 });
+      const genders = await this.genderModel.find({ tenantId }).sort({ name: 1 });
       return genders;
     } catch (error) {
       throw new BadRequestException('Error al obtener los géneros: ' + error.message);
     }
   }
 
-  async findOne(id: string) {
+  async findOne(tenantId: string, id: string) {
     try {
-      const gender = await this.genderModel.findById(id);
+      const gender = await this.genderModel.findOne({ _id: id, tenantId });
       
       if (!gender) {
         throw new NotFoundException('Género no encontrado');
@@ -55,14 +60,14 @@ export class GenderService {
     }
   }
 
-  async update(id: string, updateGenderDto: UpdateGenderDto) {
+  async update(tenantId: string, id: string, updateGenderDto: UpdateGenderDto) {
     try {
       const updateData = {
         ...updateGenderDto,
         name: updateGenderDto.name?.toUpperCase()
       };
-      const gender = await this.genderModel.findByIdAndUpdate(
-        id,
+      const gender = await this.genderModel.findOneAndUpdate(
+        { _id: id, tenantId },
         updateData,
         { new: true }
       );
@@ -77,15 +82,19 @@ export class GenderService {
         throw error;
       }
       if (error.code === 11000) {
-        throw new BadRequestException('Ya existe un género con ese nombre');
+        throw new BadRequestException({
+          message: 'Ya existe un género con ese nombre',
+          error: 'DUPLICATE_GENDER',
+          statusCode: 400
+        });
       }
       throw new BadRequestException('Error al actualizar el género: ' + error.message);
     }
   }
 
-  async remove(id: string) {
+  async remove(tenantId: string, id: string) {
     try {
-      const gender = await this.genderModel.findByIdAndDelete(id);
+      const gender = await this.genderModel.findOneAndDelete({ _id: id, tenantId });
       
       if (!gender) {
         throw new NotFoundException('Género no encontrado');

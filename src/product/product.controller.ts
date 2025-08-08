@@ -37,6 +37,12 @@ export class ProductController {
     @UploadedFiles() images: Express.Multer.File[],
   ) {
     try {
+      console.log('Creating product with tenantId:', tenantId);
+      console.log('Product data received:', createProductDto);
+      
+      if (!tenantId) {
+        throw new BadRequestException('TenantId is required');
+      }
       // Parse stock if it comes as string from FormData
       if (typeof createProductDto.stock === 'string') {
         createProductDto.stock = JSON.parse(createProductDto.stock);

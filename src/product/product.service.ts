@@ -29,6 +29,17 @@ export class ProductService {
 
   async create(tenantId: string, createProductDto: CreateProductDto) {
     try {
+      console.log('ProductService.create - tenantId:', tenantId);
+      console.log('ProductService.create - createProductDto:', createProductDto);
+
+      if (!tenantId) {
+        throw new BadRequestException('TenantId es requerido');
+      }
+
+      if (!createProductDto.name) {
+        throw new BadRequestException('El nombre del producto es requerido');
+      }
+
       // Generar código automático autoincremental
       const lastProduct = await this.productModel.findOne({ tenantId }).sort({ code: -1 }).exec();
       let nextCode = 1;
@@ -46,12 +57,15 @@ export class ProductService {
         stock: createProductDto.stock?.map(s => ({
           ...s,
           size_name: s.size_name?.toUpperCase()
-        }))
+        })) || []
       };
+
+      console.log('ProductService.create - productData to save:', productData);
 
       const product = await this.productModel.create(productData);
       return product;
     } catch (error) {
+      console.error('ProductService.create - Error:', error);
       throw new BadRequestException('Error al crear el producto: ' + error.message);
     }
   }

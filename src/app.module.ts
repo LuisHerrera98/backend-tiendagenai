@@ -17,6 +17,8 @@ import { AuthModule } from './auth/auth.module';
 import { TenantModule } from './tenant/tenant.module';
 import { UserModule } from './user/user.module';
 import { HealthModule } from './health/health.module';
+import { PublicModule } from './public/public.module';
+import { OrderModule } from './order/order.module';
 
 @Module({
   imports: [
@@ -43,6 +45,8 @@ import { HealthModule } from './health/health.module';
     TypeModule,
     GenderModule,
     ClientCreditModule,
+    PublicModule,
+    OrderModule,
   ],
   controllers: [],
   providers: [],

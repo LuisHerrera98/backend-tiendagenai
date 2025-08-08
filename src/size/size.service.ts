@@ -32,7 +32,11 @@ export class SizeService {
       });
 
       if (existingSize) {
-        throw new BadRequestException(`Ya existe una talla "${sizeData.name}" en esta categoría`);
+        throw new BadRequestException({
+          message: `Ya existe una talla "${sizeData.name}" en esta categoría`,
+          error: 'DUPLICATE_SIZE',
+          statusCode: 400
+        });
       }
 
       const size = await this.sizeModel.create(sizeData);
@@ -106,7 +110,11 @@ export class SizeService {
         });
 
         if (existingSize) {
-          throw new BadRequestException(`Ya existe una talla "${nameToCheck}" en esta categoría`);
+          throw new BadRequestException({
+            message: `Ya existe una talla "${nameToCheck}" en esta categoría`,
+            error: 'DUPLICATE_SIZE',
+            statusCode: 400
+          });
         }
       }
 

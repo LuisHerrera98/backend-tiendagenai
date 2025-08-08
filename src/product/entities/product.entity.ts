@@ -90,6 +90,27 @@ export class Product extends Document{
         index: true
     })
     tenantId: string;
+
+    @Prop({
+        required: false
+    })
+    description: string;
+
+    @Prop({
+        required: false
+    })
+    brand_name: string;
+
+    @Prop({
+        required: false
+    })
+    model_name: string;
+
+    @Prop({
+        required: false,
+        enum: ['hombre', 'mujer', 'unisex']
+    })
+    gender: string;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product)

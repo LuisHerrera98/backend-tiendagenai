@@ -13,34 +13,39 @@ export class TypeService {
     private readonly typeModel: Model<Type>
   ) {}
 
-  async create(createTypeDto: CreateTypeDto) {
+  async create(tenantId: string, createTypeDto: CreateTypeDto) {
     try {
       const typeData = {
         ...createTypeDto,
-        name: createTypeDto.name?.toUpperCase()
+        name: createTypeDto.name?.toUpperCase(),
+        tenantId
       };
       const type = await this.typeModel.create(typeData);
       return type;
     } catch (error) {
       if (error.code === 11000) {
-        throw new BadRequestException('Ya existe un tipo con ese nombre');
+        throw new BadRequestException({
+          message: 'Ya existe un tipo con ese nombre',
+          error: 'DUPLICATE_TYPE',
+          statusCode: 400
+        });
       }
       throw new BadRequestException('Error al crear el tipo: ' + error.message);
     }
   }
 
-  async findAll() {
+  async findAll(tenantId: string) {
     try {
-      const types = await this.typeModel.find().sort({ name: 1 });
+      const types = await this.typeModel.find({ tenantId }).sort({ name: 1 });
       return types;
     } catch (error) {
       throw new BadRequestException('Error al obtener los tipos: ' + error.message);
     }
   }
 
-  async findOne(id: string) {
+  async findOne(tenantId: string, id: string) {
     try {
-      const type = await this.typeModel.findById(id);
+      const type = await this.typeModel.findOne({ _id: id, tenantId });
       
       if (!type) {
         throw new NotFoundException('Tipo no encontrado');
@@ -55,14 +60,14 @@ export class TypeService {
     }
   }
 
-  async update(id: string, updateTypeDto: UpdateTypeDto) {
+  async update(tenantId: string, id: string, updateTypeDto: UpdateTypeDto) {
     try {
       const updateData = {
         ...updateTypeDto,
         name: updateTypeDto.name?.toUpperCase()
       };
-      const type = await this.typeModel.findByIdAndUpdate(
-        id,
+      const type = await this.typeModel.findOneAndUpdate(
+        { _id: id, tenantId },
         updateData,
         { new: true }
       );
@@ -77,15 +82,19 @@ export class TypeService {
         throw error;
       }
       if (error.code === 11000) {
-        throw new BadRequestException('Ya existe un tipo con ese nombre');
+        throw new BadRequestException({
+          message: 'Ya existe un tipo con ese nombre',
+          error: 'DUPLICATE_TYPE',
+          statusCode: 400
+        });
       }
       throw new BadRequestException('Error al actualizar el tipo: ' + error.message);
     }
   }
 
-  async remove(id: string) {
+  async remove(tenantId: string, id: string) {
     try {
-      const type = await this.typeModel.findByIdAndDelete(id);
+      const type = await this.typeModel.findOneAndDelete({ _id: id, tenantId });
       
       if (!type) {
         throw new NotFoundException('Tipo no encontrado');

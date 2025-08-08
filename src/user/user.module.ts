@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { User, UserSchema } from './entities/user.entity';
@@ -11,6 +13,13 @@ import { Tenant, TenantSchema } from '../tenant/entities/tenant.entity';
       { name: User.name, schema: UserSchema },
       { name: Tenant.name, schema: TenantSchema },
     ]),
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get('JWT_SECRET') || 'your-secret-key',
+        signOptions: { expiresIn: '7d' },
+      }),
+    }),
   ],
   controllers: [UserController],
   providers: [UserService],

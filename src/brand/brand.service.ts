@@ -24,7 +24,11 @@ export class BrandService {
       return brand;
     } catch (error) {
       if (error.code === 11000) {
-        throw new BadRequestException('Ya existe una marca con ese nombre');
+        throw new BadRequestException({
+          message: 'Ya existe una marca con ese nombre',
+          error: 'DUPLICATE_BRAND',
+          statusCode: 400
+        });
       }
       throw new BadRequestException('Error al crear la marca: ' + error.message);
     }
@@ -78,7 +82,11 @@ export class BrandService {
         throw error;
       }
       if (error.code === 11000) {
-        throw new BadRequestException('Ya existe una marca con ese nombre');
+        throw new BadRequestException({
+          message: 'Ya existe una marca con ese nombre',
+          error: 'DUPLICATE_BRAND',
+          statusCode: 400
+        });
       }
       throw new BadRequestException('Error al actualizar la marca: ' + error.message);
     }
