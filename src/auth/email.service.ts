@@ -69,51 +69,53 @@ export class EmailService {
     }
   }
 
-  async sendPasswordResetEmail(email: string, token: string) {
-    const resetUrl = `${this.configService.get('FRONTEND_URL') || 'http://localhost:3001'}/auth/reset-password?token=${token}`;
-
+  async sendPasswordResetCode(email: string, code: string, userName?: string) {
+    console.log('📧 Preparando email con código:', { email, code, userName });
+    
     const mailOptions = {
       from: '"TiendaGenAI" <genai.for.business.sa@gmail.com>',
       to: email,
-      subject: 'Restablecer contraseña - Tu Tienda Online',
+      subject: 'Código de recuperación de contraseña - Tu Tienda Online',
+      text: `Tu código de recuperación es: ${code}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #16a34a; text-align: center;">Restablecer contraseña</h1>
+          <h1 style="color: #16a34a; text-align: center;">Recuperación de Contraseña</h1>
           
-          <p>Hola,</p>
+          <p>Hola ${userName || 'Usuario'},</p>
           
-          <p>Recibimos una solicitud para restablecer tu contraseña.</p>
+          <p>Has solicitado restablecer tu contraseña. Usa el siguiente código para continuar:</p>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetUrl}" 
-               style="background-color: #16a34a; color: white; padding: 12px 30px; 
-                      text-decoration: none; border-radius: 5px; display: inline-block;">
-              Restablecer contraseña
-            </a>
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 10px; display: inline-block;">
+              <h2 style="color: #1f2937; margin: 0; font-size: 32px; letter-spacing: 5px;">${code}</h2>
+            </div>
           </div>
           
-          <p>O copia y pega este enlace en tu navegador:</p>
-          <p style="word-break: break-all; color: #666;">${resetUrl}</p>
+          <p style="color: #666;">Este código expirará en 15 minutos por seguridad.</p>
           
-          <p>Este enlace expirará en 1 hora.</p>
+          <p>Si no solicitaste este cambio, ignora este mensaje.</p>
           
           <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
           
-          <p style="color: #666; font-size: 12px;">
-            Si no solicitaste restablecer tu contraseña, puedes ignorar este email.
+          <p style="color: #666; font-size: 12px; text-align: center;">
+            © 2024 TiendaGenAI. Todos los derechos reservados.
           </p>
         </div>
       `,
     };
 
     try {
-      await this.transporter.sendMail(mailOptions);
+      console.log('📨 Enviando email con nodemailer...');
+      const result = await this.transporter.sendMail(mailOptions);
+      console.log('✅ Email enviado exitosamente:', result.messageId);
       return true;
     } catch (error) {
-      console.error('Error sending email:', error);
+      console.error('❌ Error sending password reset code:', error);
       return false;
     }
   }
+
+  // Método eliminado - solo usamos sendPasswordResetCode con código de 6 dígitos
 
   async sendVerificationCode(email: string, code: string, subdomain: string) {
     const mailOptions = {

@@ -51,6 +51,9 @@ export class User {
   @Prop({ type: String })
   resetPasswordToken?: string;
 
+  @Prop({ type: String })
+  resetPasswordCode?: string;
+
   @Prop({ type: Date })
   resetPasswordExpires?: Date;
 

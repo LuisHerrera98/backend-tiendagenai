@@ -169,35 +169,63 @@ export class AuthService {
     const user = await this.userModel.findOne(query);
     if (!user) {
       // No revelar si el email existe o no
-      return { message: 'Si el email existe, recibirás instrucciones para restablecer tu contraseña' };
+      return { message: 'Si el email existe, recibirás un código para restablecer tu contraseña', success: true };
     }
 
-    const resetToken = uuidv4();
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hora
+    // Generar código de 6 dígitos
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    console.log('🔐 Password reset code generated:', resetCode);
+    
+    user.resetPasswordCode = resetCode;
+    user.resetPasswordToken = uuidv4(); // Mantener token para compatibilidad
+    user.resetPasswordExpires = new Date(Date.now() + 900000); // 15 minutos
     await user.save();
 
-    await this.emailService.sendPasswordResetEmail(email, resetToken);
+    console.log('📧 Sending password reset code to:', email);
+    await this.emailService.sendPasswordResetCode(email, resetCode, user.name);
 
-    return { message: 'Si el email existe, recibirás instrucciones para restablecer tu contraseña' };
+    return { message: 'Si el email existe, recibirás un código para restablecer tu contraseña', success: true };
   }
 
-  async resetPassword(token: string, newPassword: string) {
+  async verifyResetCode(email: string, code: string) {
     const user = await this.userModel.findOne({
-      resetPasswordToken: token,
+      email,
+      resetPasswordCode: code,
       resetPasswordExpires: { $gt: new Date() },
     });
 
     if (!user) {
-      throw new BadRequestException('Token inválido o expirado');
+      throw new BadRequestException('Código inválido o expirado');
+    }
+
+    return { valid: true, token: user.resetPasswordToken };
+  }
+
+  async resetPassword(email: string, code: string, newPassword: string) {
+    const user = await this.userModel.findOne({
+      email,
+      resetPasswordCode: code,
+      resetPasswordExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Código inválido o expirado');
+    }
+
+    // Verificar que la nueva contraseña no sea igual a la actual
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      throw new BadRequestException('La nueva contraseña no puede ser igual a la actual');
     }
 
     user.password = await bcrypt.hash(newPassword, 10);
     user.resetPasswordToken = undefined;
+    user.resetPasswordCode = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
 
-    return { message: 'Contraseña actualizada exitosamente' };
+    return { message: 'Contraseña actualizada exitosamente', success: true };
   }
 
   async validateUser(email: string, password: string): Promise<any> {

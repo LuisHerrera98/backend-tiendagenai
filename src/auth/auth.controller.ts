@@ -26,9 +26,14 @@ export class AuthController {
     return this.authService.requestPasswordReset(body.email, body.tenantId);
   }
 
+  @Post('verify-reset-code')
+  async verifyResetCode(@Body() body: { email: string; code: string }) {
+    return this.authService.verifyResetCode(body.email, body.code);
+  }
+
   @Post('reset-password')
-  async resetPassword(@Body() body: { token: string; newPassword: string }) {
-    return this.authService.resetPassword(body.token, body.newPassword);
+  async resetPassword(@Body() body: { email: string; code: string; newPassword: string }) {
+    return this.authService.resetPassword(body.email, body.code, body.newPassword);
   }
 
   @Get('check-subdomain/:subdomain')
