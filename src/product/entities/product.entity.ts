@@ -10,8 +10,9 @@ export class Product extends Document{
     name: string;
 
     @Prop({
-        unique: true,
-        required: true
+        unique: false,
+        required: true,
+        index: true
     })
     code: string;
 
