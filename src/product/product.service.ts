@@ -72,16 +72,33 @@ export class ProductService {
       // Esto asegura que SIEMPRE los productos nuevos estén activos
       const isActive = createProductDto.active === true ? true : true; // Siempre true para nuevos productos
       
+      // Si es tipo 'unit', crear un stock único con talle "UNIDAD"
+      let processedStock = [];
+      if (createProductDto.stockType === 'unit') {
+        // Para productos por unidad, usar el primer elemento del stock o crear uno por defecto
+        const unitQuantity = createProductDto.stock?.[0]?.quantity || 0;
+        processedStock = [{
+          size_id: 'unit',
+          size_name: 'UNIDAD',
+          quantity: unitQuantity,
+          available: true
+        }];
+      } else {
+        // Para productos con talles, procesar normalmente
+        processedStock = createProductDto.stock?.map(s => ({
+          ...s,
+          size_name: s.size_name?.toUpperCase()
+        })) || [];
+      }
+
       const productData = {
         ...createProductDto,
         tenantId,
         code: nextCode.toString(),
         name: createProductDto.name?.toUpperCase(),
         images: processedImages,
-        stock: createProductDto.stock?.map(s => ({
-          ...s,
-          size_name: s.size_name?.toUpperCase()
-        })) || [],
+        stock: processedStock,
+        stockType: createProductDto.stockType || 'sizes',
         genders: createProductDto.genders || [],
         // SIEMPRE crear productos como activos
         active: true,
@@ -106,16 +123,34 @@ export class ProductService {
       throw new NotFoundException('Producto no encontrado');
     }
  
-    const { name, price, cost, stock, active, type_id, brand_id, category_id, images, discount, gender_id, genders, color_id } = updateProductDto;
+    const { name, price, cost, stock, stockType, active, type_id, brand_id, category_id, images, discount, gender_id, genders, color_id } = updateProductDto;
  
     const update: any = {};
     if (name) update.name = name.toUpperCase();
     if (price) update.price = price;
     if (cost) update.cost = cost;
-    if (stock) update.stock = stock.map(s => ({
-      ...s,
-      size_name: s.size_name?.toUpperCase()
-    }));
+    
+    // Manejar stock según el tipo
+    if (stock) {
+      if (stockType === 'unit' || product.stockType === 'unit') {
+        // Para productos por unidad
+        const unitQuantity = stock[0]?.quantity || 0;
+        update.stock = [{
+          size_id: 'unit',
+          size_name: 'UNIDAD',
+          quantity: unitQuantity,
+          available: true
+        }];
+      } else {
+        // Para productos con talles
+        update.stock = stock.map(s => ({
+          ...s,
+          size_name: s.size_name?.toUpperCase()
+        }));
+      }
+    }
+    
+    if (stockType !== undefined) update.stockType = stockType;
     if (active !== undefined) update.active = active;
     if (type_id) update.type_id = type_id;
     if (brand_id) update.brand_id = brand_id;

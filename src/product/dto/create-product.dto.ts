@@ -41,6 +41,11 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsString()
+  @IsIn(['sizes', 'unit'])
+  stockType: string;
+
+  @IsOptional()
+  @IsString()
   brand_id: string;
 
   @IsOptional()

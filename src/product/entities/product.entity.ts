@@ -66,6 +66,14 @@ export class Product extends Document{
     stock: any[];
 
     @Prop({
+        required: false,
+        type: String,
+        enum: ['sizes', 'unit'],
+        default: 'sizes'
+    })
+    stockType: string;
+
+    @Prop({
         unique: false,
         required: false,
         index: true
