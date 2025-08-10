@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { EmailService } from './email.service';
+import { UserRole, Permission, DEFAULT_PERMISSIONS } from '../user/entities/role.entity';
 
 @Injectable()
 export class AuthService {
@@ -78,7 +79,7 @@ export class AuthService {
       email,
       password: hashedPassword,
       name: ownerName,
-      role: 'store_owner',
+      role: UserRole.ADMIN,
       tenantId: savedTenant._id,
       emailVerificationToken: verificationToken,
     });
@@ -111,7 +112,7 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    if (!user.emailVerified && user.role !== 'super_admin') {
+    if (!user.emailVerified && user.role !== UserRole.ADMIN) {
       throw new UnauthorizedException('Por favor verifica tu email antes de iniciar sesión');
     }
 
@@ -310,7 +311,7 @@ export class AuthService {
         email,
         password: hashedPassword,
         name: createTenantDto.ownerName,
-        role: 'store_owner',
+        role: UserRole.ADMIN,
         tenantIds: [savedTenant._id],
         currentTenantId: savedTenant._id,
         emailVerified: true, // Ya verificado con código

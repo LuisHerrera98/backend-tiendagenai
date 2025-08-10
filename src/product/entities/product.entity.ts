@@ -86,6 +86,13 @@ export class Product extends Document{
     gender_id: string;
 
     @Prop({
+        unique: false,
+        required: false,
+        index: true
+    })
+    color_id: string;
+
+    @Prop({
         required: true,
         index: true
     })
@@ -108,9 +115,11 @@ export class Product extends Document{
 
     @Prop({
         required: false,
-        enum: ['hombre', 'mujer', 'unisex']
+        type: [String],
+        enum: ['hombre', 'mujer', 'niño', 'niña'],
+        default: []
     })
-    gender: string;
+    genders: string[];
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product)
@@ -118,6 +127,7 @@ export const ProductSchema = SchemaFactory.createForClass(Product)
 // Add compound indexes for common filter combinations
 ProductSchema.index({ category_id: 1, brand_id: 1 });
 ProductSchema.index({ category_id: 1, gender_id: 1 });
+ProductSchema.index({ category_id: 1, color_id: 1 });
 ProductSchema.index({ active: 1, category_id: 1 });
 ProductSchema.index({ brand_id: 1, type_id: 1 });
 ProductSchema.index({ tenantId: 1, code: 1 }, { unique: true });

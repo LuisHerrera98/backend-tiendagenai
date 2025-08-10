@@ -1,10 +1,13 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './entities/user.entity';
 import { Tenant, TenantDocument } from '../tenant/entities/tenant.entity';
 import { CreateUserTenantDto } from './dto/create-user-tenant.dto';
+import { CreateManagedUserDto, UpdateManagedUserDto } from './dto/manage-user.dto';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+import { UserRole, Permission, DEFAULT_PERMISSIONS } from './entities/role.entity';
 
 @Injectable()
 export class UserService {
@@ -194,6 +197,187 @@ export class UserService {
     return {
       available: true,
       message: 'Subdominio disponible'
+    };
+  }
+
+  // Métodos de gestión de usuarios del tenant
+  async getTenantUsers(tenantId: string) {
+    const users = await this.userModel.find({
+      tenantIds: tenantId
+    }).select('-password -resetPasswordToken -emailVerificationToken');
+
+    return users.map(user => ({
+      _id: user._id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      permissions: user.role === UserRole.CUSTOM ? user.permissions : DEFAULT_PERMISSIONS[user.role],
+      active: user.active,
+      phone: user.phone,
+      address: user.address,
+      employeeCode: user.employeeCode,
+      lastLogin: user.lastLogin,
+      createdAt: user['createdAt'],
+      createdBy: user.createdBy
+    }));
+  }
+
+  async getTenantUser(userId: string, tenantId: string) {
+    const user = await this.userModel.findOne({
+      _id: userId,
+      tenantIds: tenantId
+    }).select('-password -resetPasswordToken -emailVerificationToken');
+
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    return {
+      _id: user._id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      permissions: user.role === UserRole.CUSTOM ? user.permissions : DEFAULT_PERMISSIONS[user.role],
+      active: user.active,
+      phone: user.phone,
+      address: user.address,
+      employeeCode: user.employeeCode,
+      lastLogin: user.lastLogin,
+      createdAt: user['createdAt'],
+      createdBy: user.createdBy
+    };
+  }
+
+  async createTenantUser(
+    createManagedUserDto: CreateManagedUserDto,
+    tenantId: string,
+    creatorId: string
+  ) {
+    // Verificar si el email ya existe
+    const existingUser = await this.userModel.findOne({ email: createManagedUserDto.email });
+    
+    if (existingUser) {
+      // Si el usuario ya existe, agregar el tenant a su lista
+      if (!existingUser.tenantIds.includes(tenantId)) {
+        existingUser.tenantIds.push(tenantId);
+        await existingUser.save();
+      }
+      throw new BadRequestException('Este email ya está registrado. El usuario fue agregado a esta tienda.');
+    }
+
+    // Crear nuevo usuario
+    const hashedPassword = await bcrypt.hash(createManagedUserDto.password, 10);
+    
+    const newUser = new this.userModel({
+      ...createManagedUserDto,
+      password: hashedPassword,
+      tenantIds: [tenantId],
+      currentTenantId: tenantId,
+      emailVerified: true, // Los usuarios creados por admin están verificados
+      createdBy: creatorId,
+      permissions: createManagedUserDto.role === UserRole.CUSTOM ? createManagedUserDto.permissions : []
+    });
+
+    const savedUser = await newUser.save();
+
+    return {
+      _id: savedUser._id,
+      email: savedUser.email,
+      name: savedUser.name,
+      role: savedUser.role,
+      permissions: savedUser.role === UserRole.CUSTOM ? savedUser.permissions : DEFAULT_PERMISSIONS[savedUser.role],
+      active: savedUser.active,
+      phone: savedUser.phone,
+      address: savedUser.address,
+      employeeCode: savedUser.employeeCode
+    };
+  }
+
+  async updateTenantUser(
+    userId: string,
+    updateManagedUserDto: UpdateManagedUserDto,
+    tenantId: string,
+    updaterId: string
+  ) {
+    const user = await this.userModel.findOne({
+      _id: userId,
+      tenantIds: tenantId
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    // No permitir que un usuario se modifique a sí mismo el rol
+    if (userId === updaterId && updateManagedUserDto.role) {
+      throw new ForbiddenException('No puedes cambiar tu propio rol');
+    }
+
+    // Si se está actualizando la contraseña, hashearla
+    if (updateManagedUserDto.password) {
+      updateManagedUserDto.password = await bcrypt.hash(updateManagedUserDto.password, 10);
+    }
+
+    // Si se cambia el rol a algo diferente de CUSTOM, limpiar permisos
+    if (updateManagedUserDto.role && updateManagedUserDto.role !== UserRole.CUSTOM) {
+      updateManagedUserDto.permissions = [];
+    }
+
+    Object.assign(user, updateManagedUserDto);
+    const updatedUser = await user.save();
+
+    return {
+      _id: updatedUser._id,
+      email: updatedUser.email,
+      name: updatedUser.name,
+      role: updatedUser.role,
+      permissions: updatedUser.role === UserRole.CUSTOM ? updatedUser.permissions : DEFAULT_PERMISSIONS[updatedUser.role],
+      active: updatedUser.active,
+      phone: updatedUser.phone,
+      address: updatedUser.address,
+      employeeCode: updatedUser.employeeCode
+    };
+  }
+
+  async deleteTenantUser(userId: string, tenantId: string, deleterId: string) {
+    // No permitir que un usuario se elimine a sí mismo
+    if (userId === deleterId) {
+      throw new ForbiddenException('No puedes eliminar tu propia cuenta');
+    }
+
+    const user = await this.userModel.findOne({
+      _id: userId,
+      tenantIds: tenantId
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    // Si el usuario solo pertenece a este tenant, eliminarlo completamente
+    if (user.tenantIds.length === 1) {
+      await this.userModel.deleteOne({ _id: userId });
+    } else {
+      // Si pertenece a más tenants, solo remover este tenant
+      user.tenantIds = user.tenantIds.filter(id => id.toString() !== tenantId);
+      if (user.currentTenantId?.toString() === tenantId) {
+        user.currentTenantId = user.tenantIds[0];
+      }
+      await user.save();
+    }
+
+    return { message: 'Usuario eliminado exitosamente' };
+  }
+
+  async getAvailablePermissions() {
+    return {
+      roles: Object.values(UserRole),
+      permissions: Object.values(Permission).map(p => ({
+        key: p,
+        name: p.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
+        category: p.split('.')[0].toUpperCase()
+      })),
+      defaultPermissions: DEFAULT_PERMISSIONS
     };
   }
 }

@@ -2,6 +2,7 @@ import { Controller, Get, Put, Body, Param, UseGuards, Request } from '@nestjs/c
 import { TenantService } from './tenant.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
+import { UserRole } from '../user/entities/role.entity';
 
 @Controller('tenant')
 export class TenantController {
@@ -38,7 +39,7 @@ export class TenantController {
   @UseGuards(JwtAuthGuard)
   async getAllTenants(@Request() req) {
     // Solo super admin puede ver todas las tiendas
-    if (req.user.role !== 'super_admin') {
+    if (req.user.role !== UserRole.ADMIN) {
       return [];
     }
     return this.tenantService.findAll();
@@ -47,7 +48,7 @@ export class TenantController {
   @Put(':id/plan')
   @UseGuards(JwtAuthGuard)
   async updatePlan(@Request() req, @Param('id') id: string, @Body('plan') plan: string) {
-    if (req.user.role !== 'super_admin') {
+    if (req.user.role !== UserRole.ADMIN) {
       throw new Error('No autorizado');
     }
     return this.tenantService.updatePlan(id, plan);
@@ -56,7 +57,7 @@ export class TenantController {
   @Put(':id/suspend')
   @UseGuards(JwtAuthGuard)
   async suspendTenant(@Request() req, @Param('id') id: string) {
-    if (req.user.role !== 'super_admin') {
+    if (req.user.role !== UserRole.ADMIN) {
       throw new Error('No autorizado');
     }
     return this.tenantService.suspendTenant(id);
@@ -65,7 +66,7 @@ export class TenantController {
   @Put(':id/activate')
   @UseGuards(JwtAuthGuard)
   async activateTenant(@Request() req, @Param('id') id: string) {
-    if (req.user.role !== 'super_admin') {
+    if (req.user.role !== UserRole.ADMIN) {
       throw new Error('No autorizado');
     }
     return this.tenantService.activateTenant(id);

@@ -12,6 +12,7 @@ import { BrandModule } from './brand/brand.module';
 import { ExchangeModule } from './exchange/exchange.module';
 import { TypeModule } from './type/type.module';
 import { GenderModule } from './gender/gender.module';
+import { ColorModule } from './color/color.module';
 import { ClientCreditModule } from './client-credit/client-credit.module';
 import { AuthModule } from './auth/auth.module';
 import { TenantModule } from './tenant/tenant.module';
@@ -27,9 +28,7 @@ import { OrderModule } from './order/order.module';
       envFilePath: '.env',
       isGlobal: true,
     }),
-    MongooseModule.forRoot(
-      'mongodb+srv://Lucho:mision2017@db-trendsneakers.bday4jw.mongodb.net/ecommerce-test',
-    ),
+    MongooseModule.forRoot(process.env.MONGODB_URI),
     HealthModule,
     TenantModule,
     AuthModule,
@@ -44,6 +43,7 @@ import { OrderModule } from './order/order.module';
     ExchangeModule,
     TypeModule,
     GenderModule,
+    ColorModule,
     ClientCreditModule,
     PublicModule,
     OrderModule,

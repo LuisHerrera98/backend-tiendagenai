@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Tenant } from '../../tenant/entities/tenant.entity';
+import { UserRole, Permission } from './role.entity';
 
 export type UserDocument = User & Document;
 
@@ -17,10 +18,18 @@ export class User {
 
   @Prop({ 
     type: String, 
-    enum: ['super_admin', 'store_owner', 'store_admin', 'store_employee'],
-    default: 'store_owner'
+    enum: Object.values(UserRole),
+    default: UserRole.ADMIN
   })
-  role: string;
+  role: UserRole;
+
+  // Permisos personalizados (solo para rol CUSTOM)
+  @Prop({ type: [String], default: [] })
+  permissions: Permission[];
+
+  // Usuario creado por (para tracking)
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
+  createdBy?: string;
 
   // Array de tiendas que el usuario puede administrar
   @Prop([{ type: MongooseSchema.Types.ObjectId, ref: 'Tenant' }])
@@ -50,6 +59,16 @@ export class User {
 
   @Prop({ type: Date })
   lastLogin?: Date;
+
+  // Información adicional para vendedores
+  @Prop({ type: String, required: false })
+  phone?: string;
+
+  @Prop({ type: String, required: false })
+  address?: string;
+
+  @Prop({ type: String, required: false })
+  employeeCode?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

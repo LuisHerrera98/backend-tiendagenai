@@ -96,7 +96,8 @@ export class PublicService {
           id: p.brand_id?.toString() || '',
           name: p.brand_name || '',
         },
-        gender: p.gender || '',
+        gender: p.genders?.length > 0 ? p.genders[0] : '', // Por compatibilidad, usar el primer género
+        genders: p.genders || [],
       })),
       pagination: {
         page: filters.page,
@@ -125,7 +126,8 @@ export class PublicService {
       cost: product.cost,
       discount: product.discount || 0,
       code: product.code,
-      gender: product.gender,
+      gender: product.genders?.length > 0 ? product.genders[0] : '', // Por compatibilidad
+      genders: product.genders || [],
       images: product.images?.map(img => typeof img === 'string' ? img : img.url) || [],
       category: product.category_id && typeof product.category_id === 'object' ? {
         id: (product.category_id as any)._id?.toString() || '',

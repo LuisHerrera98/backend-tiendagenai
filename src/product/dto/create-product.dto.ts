@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MinLength, IsBoolean, IsNumber, IsIn } from 'class-validator';
+import { IsOptional, IsString, MinLength, IsBoolean, IsNumber, IsIn, IsArray } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class StockItem {
@@ -51,4 +51,13 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   gender_id: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsIn(['hombre', 'mujer', 'niño', 'niña'], { each: true })
+  genders: string[];
+
+  @IsOptional()
+  @IsString()
+  color_id: string;
 }

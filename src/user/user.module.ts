@@ -6,6 +6,7 @@ import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { User, UserSchema } from './entities/user.entity';
 import { Tenant, TenantSchema } from '../tenant/entities/tenant.entity';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { Tenant, TenantSchema } from '../tenant/entities/tenant.entity';
     }),
   ],
   controllers: [UserController],
-  providers: [UserService],
+  providers: [UserService, PermissionsGuard],
   exports: [UserService],
 })
 export class UserModule {}

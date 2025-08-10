@@ -49,15 +49,44 @@ export class ProductService {
         nextCode = isNaN(lastCodeNumber) ? 1 : lastCodeNumber + 1;
       }
 
+      // Procesar imágenes: aceptar tanto strings como objetos
+      const processedImages = createProductDto.images?.map((img: any) => {
+        // Si ya es un string (URL de Cloudinary), extraer el publicId
+        if (typeof img === 'string') {
+          // Extraer publicId de la URL de Cloudinary
+          // Formato: https://res.cloudinary.com/[cloud]/image/upload/v[version]/[publicId].[ext]
+          const urlParts = img.split('/');
+          const lastPart = urlParts[urlParts.length - 1];
+          const publicId = lastPart.split('.')[0]; // Quitar la extensión
+          
+          return {
+            url: img,
+            publicId: publicId
+          };
+        }
+        // Si ya es un objeto, mantenerlo como está
+        return img;
+      }) || [];
+
+      // Forzar active a true si no viene o viene como false
+      // Esto asegura que SIEMPRE los productos nuevos estén activos
+      const isActive = createProductDto.active === true ? true : true; // Siempre true para nuevos productos
+      
       const productData = {
         ...createProductDto,
         tenantId,
         code: nextCode.toString(),
         name: createProductDto.name?.toUpperCase(),
+        images: processedImages,
         stock: createProductDto.stock?.map(s => ({
           ...s,
           size_name: s.size_name?.toUpperCase()
-        })) || []
+        })) || [],
+        genders: createProductDto.genders || [],
+        // SIEMPRE crear productos como activos
+        active: true,
+        // Eliminar el campo gender si existe (legacy)
+        gender: undefined
       };
 
       console.log('ProductService.create - productData to save:', productData);
@@ -77,7 +106,7 @@ export class ProductService {
       throw new NotFoundException('Producto no encontrado');
     }
  
-    const { name, price, cost, stock, active, type_id, brand_id, category_id, images, discount, gender_id } = updateProductDto;
+    const { name, price, cost, stock, active, type_id, brand_id, category_id, images, discount, gender_id, genders, color_id } = updateProductDto;
  
     const update: any = {};
     if (name) update.name = name.toUpperCase();
@@ -91,8 +120,28 @@ export class ProductService {
     if (type_id) update.type_id = type_id;
     if (brand_id) update.brand_id = brand_id;
     if (gender_id) update.gender_id = gender_id;
+    if (genders) update.genders = genders;
+    if (color_id !== undefined) update.color_id = color_id;
     if (category_id) update.category_id = category_id;
-    if (images) update.images = images;
+    if (images) {
+      // Procesar imágenes: aceptar tanto strings como objetos
+      update.images = images.map((img: any) => {
+        // Si ya es un string (URL de Cloudinary), extraer el publicId
+        if (typeof img === 'string') {
+          // Extraer publicId de la URL de Cloudinary
+          const urlParts = img.split('/');
+          const lastPart = urlParts[urlParts.length - 1];
+          const publicId = lastPart.split('.')[0]; // Quitar la extensión
+          
+          return {
+            url: img,
+            publicId: publicId
+          };
+        }
+        // Si ya es un objeto, mantenerlo como está
+        return img;
+      });
+    }
     if (discount !== undefined) update.discount = discount;
  
     return this.productModel.findOneAndUpdate(
@@ -134,10 +183,14 @@ export class ProductService {
     return {
       data: products.map(product => ({
         ...product,
-        images: product.images.map((img: any) => ({
-          url: img.url,
-          publicId: img.publicId
-        }))
+        images: product.images?.map((img: any) => {
+          // Si es un string directo (nuevo formato), devolver como está
+          if (typeof img === 'string') {
+            return img;
+          }
+          // Si es un objeto con url (formato antiguo), devolver solo la url
+          return img.url || img;
+        }) || []
       })),
       total,
       page,
@@ -293,6 +346,8 @@ export class ProductService {
     sizeName?: string,
     name?: string,
     gender?: string,
+    colorId?: string,
+    active?: boolean,
     page: number = 1,
     limit: number = 8,
     showAll: boolean = false // Nuevo parámetro para mostrar todos los productos
@@ -301,8 +356,12 @@ export class ProductService {
       const skip = (page - 1) * limit;
       const filter: any = { tenantId };
       
-      // Solo filtrar por activos si no se especifica mostrar todos (para admin)
-      if (!showAll) {
+      // Manejo del filtro de estado activo/inactivo
+      if (active !== undefined) {
+        // Si se especifica explícitamente el filtro active, usarlo
+        filter.active = active;
+      } else if (!showAll) {
+        // Si no se especifica y no es showAll, mostrar solo activos
         filter.active = true;
       }
 
@@ -332,8 +391,13 @@ export class ProductService {
         };
       }
 
-      // Filtro por género
-      if (gender) filter.gender_id = gender;
+      // Filtro por género - ahora busca en el array de géneros
+      if (gender) {
+        filter.genders = gender; // MongoDB automáticamente busca si el valor está en el array
+      }
+
+      // Filtro por color
+      if (colorId) filter.color_id = colorId;
 
       const [products, total] = await Promise.all([
         this.productModel.find(filter)
@@ -348,10 +412,14 @@ export class ProductService {
       return {
         data: products.map(product => ({
           ...product,
-          images: product.images?.map((img: any) => ({
-            url: img.url,
-            publicId: img.publicId
-          })) || []
+          images: product.images?.map((img: any) => {
+            // Si es un string directo (nuevo formato), devolver como está
+            if (typeof img === 'string') {
+              return img;
+            }
+            // Si es un objeto con url (formato antiguo), devolver solo la url
+            return img.url || img;
+          }) || []
         })),
         total,
         page,
@@ -383,6 +451,74 @@ export class ProductService {
       }));
     } catch (error) {
       throw new BadRequestException('Error al obtener talles de la categoría: ' + error.message);
+    }
+  }
+
+  // Método para eliminar una imagen de un producto y de Cloudinary
+  async deleteProductImage(tenantId: string, productId: string, imageUrl: string) {
+    try {
+      // Buscar el producto
+      const product = await this.productModel.findOne({ _id: productId, tenantId });
+      
+      if (!product) {
+        throw new NotFoundException('Producto no encontrado');
+      }
+
+      // Buscar la imagen en el array de imágenes
+      const imageIndex = product.images.findIndex((img: any) => {
+        if (typeof img === 'string') {
+          return img === imageUrl;
+        }
+        return img.url === imageUrl;
+      });
+
+      if (imageIndex === -1) {
+        throw new NotFoundException('Imagen no encontrada en el producto');
+      }
+
+      // Obtener el publicId para borrar de Cloudinary
+      let publicId: string | null = null;
+      const imageData = product.images[imageIndex];
+      
+      if (typeof imageData === 'object' && imageData.publicId) {
+        publicId = imageData.publicId;
+      } else if (typeof imageData === 'string' || (typeof imageData === 'object' && imageData.url)) {
+        // Extraer publicId de la URL
+        const url = typeof imageData === 'string' ? imageData : imageData.url;
+        const urlParts = url.split('/');
+        const lastPart = urlParts[urlParts.length - 1];
+        publicId = lastPart.split('.')[0];
+      }
+
+      // Intentar borrar de Cloudinary si tenemos publicId
+      if (publicId) {
+        try {
+          await this.cloudinaryService.deleteImage(publicId);
+        } catch (cloudinaryError) {
+          console.error('Error al borrar imagen de Cloudinary:', cloudinaryError);
+          // Continuar aunque falle el borrado de Cloudinary
+        }
+      }
+
+      // Remover la imagen del array
+      product.images.splice(imageIndex, 1);
+
+      // Actualizar el producto
+      await this.productModel.findOneAndUpdate(
+        { _id: productId, tenantId },
+        { $set: { images: product.images } },
+        { new: true }
+      );
+
+      return {
+        message: 'Imagen eliminada exitosamente',
+        remainingImages: product.images.length
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException('Error al eliminar imagen: ' + error.message);
     }
   }
 }

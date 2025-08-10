@@ -395,3 +395,102 @@
   ✅ Stock management atómico y preciso
 
   ⚠️ CRÍTICO: El sistema financiero es perfecto. Mantener las reglas de integridad por día.
+
+## 🔄 Cambios Recientes (Enero 2025)
+
+### Última sesión de mejoras
+- ✅ Filtro de estado activo/inactivo agregado en productos
+- ✅ Scroll infinito con paginación de 20 productos
+- ✅ Modal de edición con visualización de imágenes
+- ✅ Campo de color agregado en edición de productos
+- ✅ Estado del producto como toggle switch elegante
+
+## 📋 Historial de Cambios (Enero 2025)
+
+### Correcciones de TypeScript
+- ✅ Reemplazadas referencias de strings literales ('super_admin', 'store_owner') con enums UserRole
+- ✅ Corregido auth.service.ts líneas 97-117: comparaciones de roles usando UserRole.ADMIN
+
+### Mejoras en UI/UX
+
+#### Vista de Colores
+- ✅ Rediseñada completamente para igualar el diseño de marcas
+- ✅ Estructura con Card, CardHeader, CardContent
+- ✅ ColorList componente con tabla ordenada
+- ✅ Modal CreateColorDialog con diseño consistente
+
+#### Gestión de Productos
+- ✅ Implementado soporte multi-género (array en lugar de campo único)
+- ✅ Checkboxes para selección múltiple de géneros
+- ✅ Backend actualizado para manejar array de géneros
+- ✅ Filtros de productos actualizados para búsqueda por género
+
+#### Layout de Productos con Sidebar
+- ✅ Nuevo diseño con filtros en sidebar izquierdo
+- ✅ Optimización de espacio (sidebar reducido de w-80 a w-64)
+- ✅ Componente ProductListWithSidebar responsivo
+- ✅ Filtros colapsables en móvil
+
+### Correcciones de Funcionalidad
+
+#### Productos Activos por Defecto
+- ✅ FORZADO: Todos los productos nuevos se crean con active: true
+- ✅ Backend product.service.ts línea 87: active siempre true
+- ✅ Frontend envía active pero backend lo sobrescribe por seguridad
+
+#### Modales con Click Outside
+- ✅ Implementado cierre de modales al hacer click fuera
+- ✅ dialog.tsx actualizado con onClick en overlay
+- ✅ stopPropagation en DialogContent para evitar cierre accidental
+
+#### Botón de Usuarios Deshabilitado
+- ✅ Agregada propiedad disabled al NavItem interface
+- ✅ Botón de Usuarios marcado como disabled: true
+- ✅ Renderizado condicional: muestra div gris con cursor-not-allowed
+- ✅ Opacity 50% y sin funcionalidad de click
+
+### Dependencias Instaladas
+- ✅ @heroicons/react: Para iconos en página de usuarios
+
+### Componentes Creados/Actualizados
+- ✅ DeleteProductDialog: Modal de confirmación para eliminar productos
+- ✅ ColorList: Lista de colores con diseño de tabla
+- ✅ ProductListWithSidebar: Nueva vista con filtros laterales
+- ✅ ProductTableInfinite: Tabla con scroll infinito y paginación automática
+
+## 📜 Mejoras de UX Recientes (Enero 2025)
+
+### Paginación con Scroll Infinito
+- ✅ Implementado en la lista de productos
+- ✅ Carga automática de 20 productos por página
+- ✅ Indicador "Cargando más productos..." al scrollear
+- ✅ Solo el área de la tabla tiene scroll (filtros y header fijos)
+- ✅ Intersection Observer para detección automática
+
+### Modal de Edición de Productos Mejorado
+- ✅ **Visualización de imágenes integrada**:
+  - Carrusel de imágenes en el lado izquierdo
+  - Miniaturas clickeables para navegación rápida
+  - Indicador de imagen actual (1 de 3, etc.)
+  - Botones de navegación prev/next
+- ✅ **Layout optimizado 3 columnas**:
+  - Columna 1: Imágenes del producto con carrusel
+  - Columnas 2-3: Formulario de edición completo
+- ✅ **Gestión de stock mejorada**:
+  - Muestra cantidad actual en cada talle
+  - Click en la fila activa/desactiva edición
+  - Badge gris con cantidad cuando no es editable
+  - Input editable cuando está seleccionado
+  - Preserva cantidades existentes al activar checkbox
+- ✅ **Campos actualizados**:
+  - Campo de Color agregado con todos los colores disponibles
+  - Estado del Producto como toggle switch con fondo gris
+  - Todos los campos con diseño consistente
+  - Orden optimizado: Color (izq) | Estado (der)
+
+### Optimización de Tabla de Productos
+- ✅ Solo muestra datos críticos en la tabla principal
+- ✅ Información combinada (marca/tipo como subtítulo)
+- ✅ Modal de visualización con TODOS los detalles
+- ✅ Indicadores visuales de stock y márgenes
+- ✅ Tooltips en botones de acción

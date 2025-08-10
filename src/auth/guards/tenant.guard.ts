@@ -1,5 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Observable } from 'rxjs';
+import { UserRole } from '../../user/entities/role.entity';
 
 @Injectable()
 export class TenantGuard implements CanActivate {
@@ -10,8 +11,8 @@ export class TenantGuard implements CanActivate {
     const user = request.user;
     const tenantId = request.headers['x-tenant-id'] || request.tenantId;
 
-    // Super admin puede acceder a todo
-    if (user.role === 'super_admin') {
+    // Admin puede acceder a todo
+    if (user.role === UserRole.ADMIN) {
       return true;
     }
 
