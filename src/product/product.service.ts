@@ -72,14 +72,14 @@ export class ProductService {
       // Esto asegura que SIEMPRE los productos nuevos estén activos
       const isActive = createProductDto.active === true ? true : true; // Siempre true para nuevos productos
       
-      // Si es tipo 'unit', crear un stock único con talle "UNIDAD"
+      // Si es tipo 'pack', crear un stock único con talle "UNIDAD"
       let processedStock = [];
-      if (createProductDto.stockType === 'unit') {
-        // Para productos por unidad, usar el primer elemento del stock o crear uno por defecto
+      if (createProductDto.stockType === 'pack') {
+        // Para productos por paquete, usar el primer elemento del stock o crear uno por defecto
         const unitQuantity = createProductDto.stock?.[0]?.quantity || 0;
         processedStock = [{
-          size_id: 'unit',
-          size_name: 'UNIDAD',
+          size_id: 'pack',
+          size_name: 'PAQUETE',
           quantity: unitQuantity,
           available: true
         }];
@@ -132,12 +132,12 @@ export class ProductService {
     
     // Manejar stock según el tipo
     if (stock) {
-      if (stockType === 'unit' || product.stockType === 'unit') {
-        // Para productos por unidad
+      if (stockType === 'pack' || product.stockType === 'pack') {
+        // Para productos por paquete
         const unitQuantity = stock[0]?.quantity || 0;
         update.stock = [{
-          size_id: 'unit',
-          size_name: 'UNIDAD',
+          size_id: 'pack',
+          size_name: 'PAQUETE',
           quantity: unitQuantity,
           available: true
         }];
