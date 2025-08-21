@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSizeDto } from './dto/create-size.dto';
+import { CreateMultipleSizesDto } from './dto/create-multiple-sizes.dto';
 import { UpdateSizeDto } from './dto/update-size.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Size } from './entities/size.entity';
@@ -46,6 +47,68 @@ export class SizeService {
         throw error;
       }
       throw new BadRequestException('Error al crear la talla: ' + error.message);
+    }
+  }
+
+  async createMultiple(tenantId: string, createMultipleSizesDto: CreateMultipleSizesDto) {
+    try {
+      const { category_id, sizes } = createMultipleSizesDto;
+      const createdSizes = [];
+      const errors = [];
+      const skipped = [];
+
+      // Procesar cada talla
+      for (const sizeItem of sizes) {
+        const sizeName = sizeItem.name?.trim().toUpperCase();
+        
+        if (!sizeName) {
+          continue; // Saltar nombres vacíos
+        }
+
+        // Verificar si ya existe
+        const existingSize = await this.sizeModel.findOne({
+          name: sizeName,
+          category_id,
+          tenantId
+        });
+
+        if (existingSize) {
+          skipped.push({
+            name: sizeName,
+            reason: 'Ya existe'
+          });
+          continue;
+        }
+
+        try {
+          const newSize = await this.sizeModel.create({
+            name: sizeName,
+            category_id,
+            tenantId
+          });
+          createdSizes.push(newSize);
+        } catch (error) {
+          errors.push({
+            name: sizeName,
+            error: error.message
+          });
+        }
+      }
+
+      return {
+        success: true,
+        created: createdSizes,
+        skipped,
+        errors,
+        summary: {
+          total: sizes.length,
+          created: createdSizes.length,
+          skipped: skipped.length,
+          errors: errors.length
+        }
+      };
+    } catch (error) {
+      throw new BadRequestException('Error al crear las tallas: ' + error.message);
     }
   }
 

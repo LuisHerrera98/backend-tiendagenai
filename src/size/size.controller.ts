@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { SizeService } from './size.service';
 import { CreateSizeDto } from './dto/create-size.dto';
+import { CreateMultipleSizesDto } from './dto/create-multiple-sizes.dto';
 import { UpdateSizeDto } from './dto/update-size.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantId } from '../common/decorators/tenant.decorator';
@@ -13,6 +14,11 @@ export class SizeController {
   @Post()
   create(@TenantId() tenantId: string, @Body() createSizeDto: CreateSizeDto) {
     return this.sizeService.create(tenantId, createSizeDto);
+  }
+
+  @Post('multiple')
+  createMultiple(@TenantId() tenantId: string, @Body() createMultipleSizesDto: CreateMultipleSizesDto) {
+    return this.sizeService.createMultiple(tenantId, createMultipleSizesDto);
   }
 
   @Get()
