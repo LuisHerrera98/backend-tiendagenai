@@ -7,6 +7,8 @@ import { Product, ProductSchema } from '../product/entities/product.entity';
 import { Category, CategorySchema } from '../category/entities/category.entity';
 import { Brand, BrandSchema } from '../brand/entities/brand.entity';
 import { Gender, GenderSchema } from '../gender/entities/gender.entity';
+import { Size, SizeSchema } from '../size/entities/size.entity';
+import { Color, ColorSchema } from '../color/entities/color.entity';
 import { OrderModule } from '../order/order.module';
 
 @Module({
@@ -17,6 +19,8 @@ import { OrderModule } from '../order/order.module';
       { name: Category.name, schema: CategorySchema },
       { name: Brand.name, schema: BrandSchema },
       { name: Gender.name, schema: GenderSchema },
+      { name: Size.name, schema: SizeSchema },
+      { name: Color.name, schema: ColorSchema },
     ]),
     OrderModule,
   ],

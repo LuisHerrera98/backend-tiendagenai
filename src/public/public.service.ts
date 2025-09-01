@@ -6,6 +6,8 @@ import { Product } from '../product/entities/product.entity';
 import { Category } from '../category/entities/category.entity';
 import { Brand } from '../brand/entities/brand.entity';
 import { Gender } from '../gender/entities/gender.entity';
+import { Size } from '../size/entities/size.entity';
+import { Color } from '../color/entities/color.entity';
 import { OrderService } from '../order/order.service';
 import { CreateOrderDto } from '../order/dto/create-order.dto';
 
@@ -17,6 +19,8 @@ export class PublicService {
     @InjectModel(Category.name) private categoryModel: Model<Category>,
     @InjectModel(Brand.name) private brandModel: Model<Brand>,
     @InjectModel(Gender.name) private genderModel: Model<Gender>,
+    @InjectModel(Size.name) private sizeModel: Model<Size>,
+    @InjectModel(Color.name) private colorModel: Model<Color>,
     private orderService: OrderService,
   ) {}
 
@@ -45,7 +49,10 @@ export class PublicService {
       featured?: boolean;
       category?: string;
       brand?: string;
+      brands?: string[];
       gender?: string;
+      sizes?: string[];
+      colors?: string[];
       limit: number;
       page: number;
     },
@@ -63,8 +70,28 @@ export class PublicService {
       query.brand_id = filters.brand;
     }
 
+    // Filtro por múltiples marcas
+    if (filters.brands && filters.brands.length > 0) {
+      query.brand_name = { $in: filters.brands };
+    }
+
     if (filters.gender) {
       query.gender_id = filters.gender;
+    }
+
+    // Filtro por colores
+    if (filters.colors && filters.colors.length > 0) {
+      query.color_id = { $in: filters.colors };
+    }
+
+    // Para filtrar por tallas, necesitamos productos que tengan stock en las tallas seleccionadas
+    if (filters.sizes && filters.sizes.length > 0) {
+      query['stock'] = {
+        $elemMatch: {
+          size_id: { $in: filters.sizes },
+          quantity: { $gt: 0 }
+        }
+      };
     }
 
     // Por ahora simular productos destacados con los primeros productos
@@ -201,6 +228,69 @@ export class PublicService {
     return {
       brands,
       genders
+    };
+  }
+
+  async getStoreFiltersByCategory(tenantId: string, categoryId: string) {
+    // Obtener productos de la categoría específica
+    const products = await this.productModel
+      .find({ 
+        tenantId, 
+        category_id: categoryId, 
+        active: true 
+      })
+      .populate('stock.size_id', 'name')
+      .select('brand_name color_id stock');
+
+    // Extraer marcas únicas
+    const brandsSet = new Set<string>();
+    const colorsSet = new Set<string>();
+    const sizesMap = new Map<string, string>();
+
+    products.forEach(product => {
+      // Marcas
+      if (product.brand_name) {
+        brandsSet.add(product.brand_name);
+      }
+
+      // Colores
+      if (product.color_id) {
+        colorsSet.add(product.color_id.toString());
+      }
+
+      // Tallas
+      if (product.stock && Array.isArray(product.stock)) {
+        product.stock.forEach(item => {
+          if (item.size_id && item.quantity > 0) {
+            // Verificar si size_id es un objeto poblado o solo un ID
+            if (typeof item.size_id === 'object' && item.size_id._id) {
+              sizesMap.set(item.size_id._id.toString(), item.size_id.name);
+            } else if (typeof item.size_id === 'string' && item.size_name) {
+              sizesMap.set(item.size_id, item.size_name);
+            }
+          }
+        });
+      }
+    });
+
+    // Obtener información de colores
+    const colorIds = Array.from(colorsSet);
+    const colors = await this.colorModel
+      .find({ _id: { $in: colorIds } })
+      .select('name');
+
+    // Formatear respuesta
+    return {
+      sizes: Array.from(sizesMap.entries()).map(([id, name]) => ({ id, name }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+      colors: colors.map(c => ({ 
+        id: c._id.toString(), 
+        name: c.name 
+      })).sort((a, b) => a.name.localeCompare(b.name)),
+      brands: Array.from(brandsSet).map(name => ({ 
+        id: name.toLowerCase().replace(/\s+/g, '-'), 
+        name 
+      })).sort((a, b) => a.name.localeCompare(b.name))
     };
   }
 

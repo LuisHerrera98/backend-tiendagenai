@@ -61,6 +61,10 @@ export class Tenant {
     whatsappEnabled?: boolean;
     instagram?: string;
     facebook?: string;
+    simpleStoreEnabled?: boolean;
+    freeShippingEnabled?: boolean;
+    freeShippingMinAmount?: number;
+    freeShippingText?: string;
   };
 
   @Prop({ type: String })

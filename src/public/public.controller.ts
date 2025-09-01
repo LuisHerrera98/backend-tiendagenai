@@ -21,7 +21,10 @@ export class PublicController {
     @Query('featured') featured?: string,
     @Query('category') category?: string,
     @Query('brand') brand?: string,
+    @Query('brands') brands?: string,
     @Query('gender') gender?: string,
+    @Query('sizes') sizes?: string,
+    @Query('colors') colors?: string,
     @Query('limit') limit?: string,
     @Query('page') page?: string,
   ) {
@@ -34,7 +37,10 @@ export class PublicController {
       featured: featured === 'true',
       category,
       brand,
+      brands: brands ? brands.split(',') : [],
       gender,
+      sizes: sizes ? sizes.split(',') : [],
+      colors: colors ? colors.split(',') : [],
       limit: limit ? parseInt(limit) : 20,
       page: page ? parseInt(page) : 1,
     });
@@ -63,14 +69,17 @@ export class PublicController {
     return this.publicService.getStoreCategories(store.id);
   }
 
-  @Get('filters/:subdomain')
-  async getStoreFilters(@Param('subdomain') subdomain: string) {
+  @Get('filters/:subdomain/:categoryId')
+  async getStoreFilters(
+    @Param('subdomain') subdomain: string,
+    @Param('categoryId') categoryId: string
+  ) {
     const store = await this.publicService.getStoreBySubdomain(subdomain);
     if (!store) {
       throw new NotFoundException('Tienda no encontrada');
     }
 
-    return this.publicService.getStoreFilters(store.id);
+    return this.publicService.getStoreFiltersByCategory(store.id, categoryId);
   }
 
   @Post('order/:subdomain')
