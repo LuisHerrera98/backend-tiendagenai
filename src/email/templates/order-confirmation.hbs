@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmación de Pedido</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #000; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+    .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+    .order-number { background: #fff; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; }
+    .order-number h2 { color: #000; margin: 0; font-size: 24px; }
+    .order-number p { color: #666; margin: 5px 0 0 0; }
+    .items { background: #fff; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .item { padding: 10px 0; border-bottom: 1px solid #eee; }
+    .item:last-child { border-bottom: none; }
+    .total { background: #000; color: white; padding: 20px; border-radius: 8px; text-align: right; font-size: 20px; }
+    .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+    .button { display: inline-block; padding: 12px 30px; background: #10b981; color: white; text-decoration: none; border-radius: 6px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>¡Pedido Confirmado!</h1>
+    </div>
+    
+    <div class="content">
+      <p>Hola {{customerName}},</p>
+      <p>Tu pedido ha sido recibido exitosamente. Pronto nos pondremos en contacto contigo para coordinar el pago y la entrega.</p>
+      
+      <div class="order-number">
+        <h2>Pedido #{{orderNumber}}</h2>
+        <p>Código de seguimiento</p>
+      </div>
+      
+      <div class="items">
+        <h3>Productos del pedido:</h3>
+        {{#each items}}
+        <div class="item">
+          <strong>{{this.productName}}</strong><br>
+          Talle: {{this.sizeName}} | Cantidad: {{this.quantity}}<br>
+          Precio: ${{this.price}}
+        </div>
+        {{/each}}
+      </div>
+      
+      <div class="total">
+        <strong>Total: ${{total}}</strong>
+      </div>
+      
+      <p style="margin-top: 30px;">
+        <strong>¿Qué sigue?</strong><br>
+        ✓ La tienda revisará tu pedido<br>
+        ✓ Te contactaremos para coordinar el pago y entrega<br>
+        ✓ Recibirás notificaciones del estado de tu pedido
+      </p>
+    </div>
+    
+    <div class="footer">
+      <p>Gracias por tu compra en {{storeName}}</p>
+      <p>Este es un correo automático, por favor no respondas a este mensaje.</p>
+    </div>
+  </div>
+</body>
+</html>

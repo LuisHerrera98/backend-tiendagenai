@@ -44,6 +44,12 @@ export class Product extends Document{
 
     @Prop({
         unique: false,
+        required: false
+    })
+    cashPrice: number;
+
+    @Prop({
+        unique: false,
         type: Array,
         default: []
     })

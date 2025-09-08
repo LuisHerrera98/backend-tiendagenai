@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuevo Pedido</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #f59e0b; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+    .content { background: #fff; padding: 30px; border: 1px solid #e5e5e5; border-radius: 0 0 10px 10px; }
+    .order-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .customer-info { background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .items { background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .item { padding: 10px 0; border-bottom: 1px solid #ddd; }
+    .item:last-child { border-bottom: none; }
+    .total { background: #4caf50; color: white; padding: 20px; border-radius: 8px; text-align: right; font-size: 24px; font-weight: bold; }
+    .notes { background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107; }
+    .action-buttons { text-align: center; margin-top: 30px; }
+    .button { display: inline-block; padding: 12px 30px; background: #2196f3; color: white; text-decoration: none; border-radius: 6px; margin: 0 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔔 ¡Nuevo Pedido Recibido!</h1>
+    </div>
+    
+    <div class="content">
+      <div class="order-info">
+        <h2 style="margin-top: 0;">Pedido #{{orderNumber}}</h2>
+        <p style="margin: 0;">Tienda: {{storeName}}</p>
+      </div>
+      
+      <div class="customer-info">
+        <h3>Información del Cliente:</h3>
+        <p>
+          <strong>Nombre:</strong> {{customerName}}<br>
+          <strong>Teléfono:</strong> {{customerPhone}}<br>
+          <strong>Email:</strong> {{customerEmail}}
+        </p>
+      </div>
+      
+      <div class="items">
+        <h3>Productos Solicitados:</h3>
+        {{#each items}}
+        <div class="item">
+          <strong>{{this.productName}}</strong><br>
+          Talle: {{this.sizeName}} | Cantidad: {{this.quantity}}<br>
+          Precio unitario: ${{this.price}}<br>
+          Subtotal: ${{this.subtotal}}
+        </div>
+        {{/each}}
+      </div>
+      
+      {{#if notes}}
+      <div class="notes">
+        <strong>Notas del cliente:</strong><br>
+        {{notes}}
+      </div>
+      {{/if}}
+      
+      <div class="total">
+        TOTAL DEL PEDIDO: ${{total}}
+      </div>
+      
+      <div class="action-buttons">
+        <p><strong>Acciones recomendadas:</strong></p>
+        <p>
+          1. Revisar disponibilidad de stock<br>
+          2. Contactar al cliente para confirmar el pedido<br>
+          3. Coordinar método de pago y entrega
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

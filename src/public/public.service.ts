@@ -10,6 +10,7 @@ import { Size } from '../size/entities/size.entity';
 import { Color } from '../color/entities/color.entity';
 import { OrderService } from '../order/order.service';
 import { CreateOrderDto } from '../order/dto/create-order.dto';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class PublicService {
@@ -22,6 +23,7 @@ export class PublicService {
     @InjectModel(Size.name) private sizeModel: Model<Size>,
     @InjectModel(Color.name) private colorModel: Model<Color>,
     private orderService: OrderService,
+    private emailService: EmailService,
   ) {}
 
   async getStoreBySubdomain(subdomain: string) {
@@ -150,9 +152,11 @@ export class PublicService {
       name: product.name,
       description: product.description || '',
       price: product.price,
+      cashPrice: product.cashPrice || null,
       cost: product.cost,
       discount: product.discount || 0,
       code: product.code,
+      stockType: product.stockType || 'sizes',
       gender: product.genders?.length > 0 ? product.genders[0] : '', // Por compatibilidad
       genders: product.genders || [],
       images: product.images?.map(img => typeof img === 'string' ? img : img.url) || [],
@@ -295,6 +299,49 @@ export class PublicService {
   }
 
   async createOrder(tenantId: string, createOrderDto: CreateOrderDto) {
-    return this.orderService.create(tenantId, createOrderDto);
+    // Crear el pedido
+    const result = await this.orderService.create(tenantId, createOrderDto);
+    
+    // Obtener información de la tienda
+    const store = await this.tenantModel.findById(tenantId);
+    
+    if (store && result.order) {
+      // Preparar datos para los emails
+      const emailData = {
+        orderNumber: result.order._id.toString(),
+        customerName: createOrderDto.customerName,
+        customerPhone: createOrderDto.customerPhone,
+        customerEmail: createOrderDto.customerEmail,
+        storeName: store.storeName,
+        total: createOrderDto.items.reduce((sum, item) => {
+          const itemTotal = item.price * item.quantity;
+          const discount = (itemTotal * (item.discount || 0)) / 100;
+          return sum + (itemTotal - discount);
+        }, 0),
+        items: createOrderDto.items.map(item => ({
+          ...item,
+          subtotal: item.price * item.quantity,
+        })),
+        notes: createOrderDto.notes,
+      };
+      
+      // Enviar email al cliente si tiene email
+      if (createOrderDto.customerEmail) {
+        await this.emailService.sendOrderConfirmationToCustomer(
+          createOrderDto.customerEmail,
+          emailData,
+        );
+      }
+      
+      // Enviar email al dueño de la tienda si tiene email configurado
+      if (store.settings?.email) {
+        await this.emailService.sendNewOrderNotificationToOwner(
+          store.settings.email,
+          emailData,
+        );
+      }
+    }
+    
+    return result;
   }
 }

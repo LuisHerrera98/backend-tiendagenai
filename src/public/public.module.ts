@@ -10,6 +10,7 @@ import { Gender, GenderSchema } from '../gender/entities/gender.entity';
 import { Size, SizeSchema } from '../size/entities/size.entity';
 import { Color, ColorSchema } from '../color/entities/color.entity';
 import { OrderModule } from '../order/order.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { OrderModule } from '../order/order.module';
       { name: Color.name, schema: ColorSchema },
     ]),
     OrderModule,
+    EmailModule,
   ],
   controllers: [PublicController],
   providers: [PublicService]
