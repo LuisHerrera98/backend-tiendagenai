@@ -29,8 +29,7 @@ export class ProductService {
 
   async create(tenantId: string, createProductDto: CreateProductDto) {
     try {
-      console.log('ProductService.create - tenantId:', tenantId);
-      console.log('ProductService.create - createProductDto:', createProductDto);
+ 
 
       if (!tenantId) {
         throw new BadRequestException('TenantId es requerido');
@@ -41,12 +40,41 @@ export class ProductService {
       }
 
       // Generar código automático autoincremental
-      const lastProduct = await this.productModel.findOne({ tenantId }).sort({ code: -1 }).exec();
-      let nextCode = 1;
+      // Buscar todos los productos del tenant y obtener el código más alto
+      const products = await this.productModel.find({ tenantId }).select('code').exec();
+      let maxCode = 0;
       
-      if (lastProduct && lastProduct.code) {
-        const lastCodeNumber = parseInt(lastProduct.code);
-        nextCode = isNaN(lastCodeNumber) ? 1 : lastCodeNumber + 1;
+      for (const product of products) {
+        if (product.code) {
+          const codeNumber = parseInt(product.code);
+          if (!isNaN(codeNumber) && codeNumber > maxCode) {
+            maxCode = codeNumber;
+          }
+        }
+      }
+      
+      let nextCode = maxCode + 1;
+      
+      // Verificar que el código no exista (por si acaso)
+      let codeExists = true;
+      let attempts = 0;
+      while (codeExists && attempts < 10) {
+        const existingProduct = await this.productModel.findOne({ 
+          tenantId, 
+          code: nextCode.toString() 
+        }).exec();
+        
+        if (!existingProduct) {
+          codeExists = false;
+        } else {
+          nextCode++;
+          attempts++;
+         
+        }
+      }
+      
+      if (attempts >= 10) {
+        throw new BadRequestException('No se pudo generar un código único para el producto');
       }
 
       // Procesar imágenes: aceptar tanto strings como objetos
@@ -106,9 +134,15 @@ export class ProductService {
         gender: undefined
       };
 
-      console.log('ProductService.create - productData to save:', productData);
+      console.log('=== DATOS FINALES A GUARDAR ===');
+      console.log('ProductData completo:', JSON.stringify(productData, null, 2));
+      console.log('cashPrice final:', productData.cashPrice);
+      console.log('price final:', productData.price);
+      console.log('cost final:', productData.cost);
 
       const product = await this.productModel.create(productData);
+      console.log('=== PRODUCTO CREADO EXITOSAMENTE ===');
+      console.log('ID del producto:', product._id);
       return product;
     } catch (error) {
       console.error('ProductService.create - Error:', error);

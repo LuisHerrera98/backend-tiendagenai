@@ -43,9 +43,6 @@ export class ProductController {
     @UploadedFiles() images: Express.Multer.File[],
   ) {
     try {
-      console.log('Creating product with tenantId:', tenantId);
-      console.log('Product data received:', createProductDto);
-      
       if (!tenantId) {
         throw new BadRequestException('TenantId is required');
       }
@@ -65,8 +62,14 @@ export class ProductController {
       createProductDto.price = Number(createProductDto.price);
       createProductDto.discount = Number(createProductDto.discount);
       createProductDto.active = createProductDto.active === 'true';
-
-    // Primero crear el producto para obtener el código generado
+      
+      // Handle cashPrice when it comes from FormData
+      if (createProductDto.cashPrice !== undefined && createProductDto.cashPrice !== null && createProductDto.cashPrice !== '') {
+        createProductDto.cashPrice = Number(createProductDto.cashPrice);
+      } else {
+        delete createProductDto.cashPrice;
+      }
+    
     const product = await this.productService.create(tenantId, createProductDto);
     
     // Si hay imágenes, subirlas con el código generado
