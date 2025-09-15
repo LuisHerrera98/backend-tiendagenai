@@ -36,7 +36,7 @@ export class PermissionFilterUtil {
     const filteredProduct = { ...product };
 
     // Si el usuario no tiene permiso PRODUCTS_COSTS, eliminar el campo cost
-    if (!this.hasPermission(user, Permission.PRODUCTS_COSTS)) {
+    if (!this.hasPermission(user, Permission.PRODUCTS_VIEW_COSTS)) {
       delete filteredProduct.cost;
       
       // Si es un objeto de Mongoose, también eliminar del _doc
@@ -67,7 +67,7 @@ export class PermissionFilterUtil {
     const filteredStats = { ...stats };
 
     // Si el usuario no tiene permiso SALES_STATS, eliminar estadísticas de ganancias
-    if (!this.hasPermission(user, Permission.SALES_STATS)) {
+    if (!this.hasPermission(user, Permission.SALES_VIEW_STATS)) {
       delete filteredStats.totalProfit;
       delete filteredStats.averageProfit;
       delete filteredStats.profitByPeriod;

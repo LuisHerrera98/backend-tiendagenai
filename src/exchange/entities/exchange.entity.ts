@@ -88,6 +88,9 @@ export class Exchange extends Document {
     default: 'individual'
   })
   exchange_type: string;
+
+  @Prop({ required: true })
+  tenantId: string;
 }
 
 export const ExchangeSchema = SchemaFactory.createForClass(Exchange);

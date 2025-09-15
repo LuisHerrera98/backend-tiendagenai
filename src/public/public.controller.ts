@@ -15,6 +15,15 @@ export class PublicController {
     return store;
   }
 
+  @Get('payment-config/:subdomain')
+  async getPaymentConfig(@Param('subdomain') subdomain: string) {
+    const config = await this.publicService.getPaymentConfig(subdomain);
+    if (!config) {
+      throw new NotFoundException('Configuración de pago no encontrada');
+    }
+    return config;
+  }
+
   @Get('products/:subdomain')
   async getStoreProducts(
     @Param('subdomain') subdomain: string,
@@ -93,5 +102,18 @@ export class PublicController {
     }
 
     return this.publicService.createOrder(store.id, createOrderDto);
+  }
+
+  @Post('order/:subdomain/:orderId/payment-preference')
+  async createPaymentPreference(
+    @Param('subdomain') subdomain: string,
+    @Param('orderId') orderId: string,
+  ) {
+    const store = await this.publicService.getStoreBySubdomain(subdomain);
+    if (!store) {
+      throw new NotFoundException('Tienda no encontrada');
+    }
+
+    return this.publicService.createPaymentPreference(store.id, orderId);
   }
 }

@@ -33,7 +33,7 @@ export class SellController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    return this.sellService.findAll(startDate, endDate);
+    return this.sellService.findAll(tenantId, startDate, endDate);
   }
 
   @Get('stats')
@@ -44,7 +44,7 @@ export class SellController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    const stats = await this.sellService.getSalesStats(startDate, endDate);
+    const stats = await this.sellService.getSalesStats(tenantId, startDate, endDate);
     
     // Filtrar estadísticas de ganancias según permisos
     return PermissionFilterUtil.filterSalesStats(stats, user);

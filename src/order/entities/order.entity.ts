@@ -8,6 +8,26 @@ export enum OrderStatus {
   CANCELLED = 'cancelado'  // Pedido cancelado
 }
 
+export enum PaymentStatus {
+  PENDING = 'pending',           // Pago pendiente
+  PROCESSING = 'processing',     // Procesando pago
+  APPROVED = 'approved',         // Pago aprobado
+  REJECTED = 'rejected',         // Pago rechazado
+  REFUNDED = 'refunded',         // Pago reembolsado
+  CANCELLED = 'cancelled',       // Pago cancelado
+  IN_PROCESS = 'in_process',     // En proceso (MP)
+  IN_MEDIATION = 'in_mediation', // En mediación (MP)
+  CHARGED_BACK = 'charged_back'  // Contracargo (MP)
+}
+
+export enum PaymentMethod {
+  CASH = 'cash',                 // Efectivo
+  TRANSFER = 'transfer',         // Transferencia
+  MERCADO_PAGO = 'mercado_pago', // Mercado Pago
+  QR = 'qr',                     // QR
+  CARD = 'card'                  // Tarjeta (manual)
+}
+
 @Schema({ 
   collection: 'orders', 
   versionKey: false,
@@ -87,6 +107,59 @@ export class Order extends Document {
 
   @Prop()
   notes?: string;
+
+  // Campos de pago
+  @Prop({
+    type: String,
+    enum: PaymentMethod,
+    default: PaymentMethod.CASH
+  })
+  paymentMethod: PaymentMethod;
+
+  @Prop({
+    type: String,
+    enum: PaymentStatus,
+    default: PaymentStatus.PENDING
+  })
+  paymentStatus: PaymentStatus;
+
+  // Campos específicos de Mercado Pago
+  @Prop({ type: Object })
+  mercadoPagoData?: {
+    preferenceId?: string;
+    paymentId?: string;
+    merchantOrderId?: string;
+    collectionId?: string;
+    collectionStatus?: string;
+    externalReference?: string;
+    paymentType?: string;
+    processingMode?: string;
+    merchantAccountId?: string;
+    payer?: {
+      id?: string;
+      email?: string;
+      identification?: {
+        type?: string;
+        number?: string;
+      };
+    };
+    transactionDetails?: {
+      netReceivedAmount?: number;
+      totalPaidAmount?: number;
+      installmentAmount?: number;
+      overpaidAmount?: number;
+    };
+    feeDetails?: Array<{
+      type?: string;
+      amount?: number;
+      feePayer?: string;
+    }>;
+    lastFourDigits?: string;
+    statementDescriptor?: string;
+    dateApproved?: Date;
+    dateCreated?: Date;
+    lastModified?: Date;
+  };
 
   @Prop({
     type: Date,

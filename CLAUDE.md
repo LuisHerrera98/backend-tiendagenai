@@ -183,6 +183,12 @@
   ├── SaleMetricCard            // Tarjetas de métricas
   └── ImageModal                // Modal visualización imágenes
 
+  // User Management
+  /app/admin/usuarios/page.tsx    // Gestión completa de usuarios
+  ├── UserModal                   // Modal crear/editar usuario
+  ├── PermissionAssignment        // Componente asignación de permisos
+  └── DeleteConfirmDialog         // Confirmación eliminar usuario
+
   Backend - Endpoints Principales:
 
   // Products
@@ -209,6 +215,19 @@
   GET    /client-credit            // Obtener créditos activos
   POST   /client-credit            // Crear crédito cliente
   GET    /client-credit/active/:document // Créditos activos por documento
+
+  // User Management (Enero 2025)
+  GET    /user/tenant-users        // Obtener usuarios del tenant
+  POST   /user/tenant-users        // Crear usuario del tenant
+  PATCH  /user/tenant-users/:id    // Actualizar usuario
+  DELETE /user/tenant-users/:id    // Eliminar usuario
+  POST   /user/tenant-users/:id/reset-password // Reset password por admin
+  
+  // Authentication Tenant-Specific
+  POST   /auth/tenant/login        // Login con formato user@tenant
+  POST   /auth/tenant/setup-password // Configurar password primera vez
+  POST   /auth/tenant/request-reset  // Solicitar reset con 6 dígitos
+  POST   /auth/tenant/reset-password // Cambiar password con código
 
   🎨 Características de UI/UX
 
@@ -355,10 +374,21 @@
   - Validaciones robustas frontend/backend
   - Agrupación visual inteligente de productos
 
+  8. 🔐 Sistema de Usuarios y Permisos (COMPLETO):
+
+  - ✅ Sistema multi-tenant con usuarios por tienda
+  - ✅ Tres roles principales: ADMIN, VENDEDOR, CUSTOM
+  - ✅ Permisos granulares por módulo (productos, ventas, etc.)
+  - ✅ Login con formato username@tenant.com (ej: jose@mitienda.com)
+  - ✅ Primera vez login: configuración de contraseña
+  - ✅ Recuperación de contraseña con código de 6 dígitos por email
+  - ✅ Gestión completa de usuarios desde el admin
+  - ✅ Vendedores: pueden registrar ventas pero NO ver costos ni modificar stock
+  - ✅ Asignación dinámica de permisos para roles personalizados
+
   Próximas Mejoras Potenciales:
 
   - Reportes y analytics avanzados
-  - Gestión de usuarios/roles
   - Sistema de inventario automático
   - Notificaciones push
   - Tests automatizados
@@ -398,12 +428,36 @@
 
 ## 🔄 Cambios Recientes (Enero 2025)
 
+### Sistema de Usuarios y Permisos (Enero 2025)
+- ✅ **Backend completo**:
+  - AuthTenantService para autenticación multi-tenant
+  - UserManagementService para CRUD de usuarios
+  - Sistema de permisos granulares con guards
+  - Login con formato jose@mitienda.com
+  - Primera vez login con setup de contraseña
+  - Recuperación con código de 6 dígitos
+  - Emails HTML con templates Handlebars
+
+- ✅ **Frontend completo**:
+  - Página de gestión de usuarios en /admin/usuarios
+  - Modal de creación/edición con roles y permisos
+  - Asignación de permisos personalizados
+  - Búsqueda y filtrado de usuarios
+  - Estados activo/inactivo
+  - Confirmación de eliminación
+
+- ✅ **Roles implementados**:
+  - ADMIN: Acceso total al sistema
+  - VENDEDOR: Puede registrar ventas, NO ve costos ni modifica stock
+  - CUSTOM: Permisos personalizados asignables
+
 ### Última sesión de mejoras
 - ✅ Filtro de estado activo/inactivo agregado en productos
 - ✅ Scroll infinito con paginación de 20 productos
 - ✅ Modal de edición con visualización de imágenes
 - ✅ Campo de color agregado en edición de productos
 - ✅ Estado del producto como toggle switch elegante
+- ✅ Botones de Ventas y Usuarios habilitados en sidebar
 
 ## 📋 Historial de Cambios (Enero 2025)
 

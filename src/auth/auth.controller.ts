@@ -1,10 +1,20 @@
 import { Controller, Post, Body, Get, Query, UseGuards, Request, Param } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { AuthTenantService } from './auth-tenant.service';
 import { CreateTenantDto } from '../tenant/dto/create-tenant.dto';
+import { 
+  LoginTenantDto, 
+  SetupPasswordDto, 
+  RequestPasswordResetDto, 
+  ResetPasswordWithCodeDto 
+} from './dto/login-tenant.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly authTenantService: AuthTenantService
+  ) {}
 
   @Post('register')
   async register(@Body() createTenantDto: CreateTenantDto) {
@@ -44,6 +54,32 @@ export class AuthController {
   @Post('send-verification-code')
   async sendVerificationCode(@Body() createTenantDto: CreateTenantDto) {
     return this.authService.sendVerificationCode(createTenantDto);
+  }
+
+  // Nuevos endpoints para login con tenant
+  @Post('tenant/login')
+  async tenantLogin(@Body() loginDto: LoginTenantDto) {
+    return this.authTenantService.loginWithTenantEmail(loginDto);
+  }
+
+  @Post('tenant/setup-password')
+  async setupPassword(@Body() setupDto: SetupPasswordDto) {
+    return this.authTenantService.setupPassword(setupDto);
+  }
+
+  @Post('tenant/request-reset')
+  async requestTenantPasswordReset(@Body() requestDto: RequestPasswordResetDto) {
+    return this.authTenantService.requestPasswordReset(requestDto);
+  }
+
+  @Post('tenant/reset-password')
+  async resetTenantPassword(@Body() resetDto: ResetPasswordWithCodeDto) {
+    return this.authTenantService.resetPasswordWithCode(resetDto);
+  }
+
+  @Get('tenant/check-email')
+  async checkEmailStatus(@Query('email') email: string) {
+    return this.authTenantService.checkEmailStatus(email);
   }
 
   @Post('verify-code-and-create-tenant')

@@ -67,6 +67,30 @@ export class Tenant {
     freeShippingText?: string;
   };
 
+  @Prop({ type: Object })
+  mercadoPagoConfig: {
+    enabled?: boolean;
+    mode?: 'test' | 'production';
+    test?: {
+      accessToken?: string; // Encriptado
+      publicKey?: string;
+    };
+    production?: {
+      accessToken?: string; // Encriptado
+      publicKey?: string;
+    };
+    webhookSecret?: string; // Encriptado - compartido entre test y prod
+    notificationUrl?: string;
+    successUrl?: string;
+    failureUrl?: string;
+    pendingUrl?: string;
+    autoReturn?: boolean;
+    binaryMode?: boolean;
+    expirationMinutes?: number;
+    lastTestValidation?: Date;
+    lastProdValidation?: Date;
+  };
+
   @Prop({ type: String })
   verificationToken?: string;
 

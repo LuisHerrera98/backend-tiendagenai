@@ -201,9 +201,9 @@ export class SellService {
     }
   }
 
-  async getSalesStats(startDate?: string, endDate?: string) {
+  async getSalesStats(tenantId: string, startDate?: string, endDate?: string) {
     try {
-      const allSells = await this.findAll(startDate, endDate);
+      const allSells = await this.findAll(tenantId, startDate, endDate);
       
       // Filtrar solo ventas que no estén anuladas por cambio
       const activeSells = allSells.filter(sell => sell.exchange_type !== 'anulada_por_cambio');

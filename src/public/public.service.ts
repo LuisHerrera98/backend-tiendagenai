@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Tenant, TenantDocument } from '../tenant/entities/tenant.entity';
@@ -8,12 +8,17 @@ import { Brand } from '../brand/entities/brand.entity';
 import { Gender } from '../gender/entities/gender.entity';
 import { Size } from '../size/entities/size.entity';
 import { Color } from '../color/entities/color.entity';
+import { Order, PaymentMethod } from '../order/entities/order.entity';
 import { OrderService } from '../order/order.service';
 import { CreateOrderDto } from '../order/dto/create-order.dto';
 import { EmailService } from '../email/email.service';
+import { PaymentService } from '../payment/payment.service';
+import { EncryptionService } from '../common/services/encryption.service';
 
 @Injectable()
 export class PublicService {
+  private encryptionService: EncryptionService;
+
   constructor(
     @InjectModel(Tenant.name) private tenantModel: Model<TenantDocument>,
     @InjectModel(Product.name) private productModel: Model<Product>,
@@ -22,9 +27,37 @@ export class PublicService {
     @InjectModel(Gender.name) private genderModel: Model<Gender>,
     @InjectModel(Size.name) private sizeModel: Model<Size>,
     @InjectModel(Color.name) private colorModel: Model<Color>,
+    @InjectModel(Order.name) private orderModel: Model<Order>,
     private orderService: OrderService,
     private emailService: EmailService,
-  ) {}
+    private paymentService: PaymentService,
+  ) {
+    this.encryptionService = new EncryptionService();
+  }
+
+  async getPaymentConfig(subdomain: string) {
+    const store = await this.tenantModel.findOne({ 
+      subdomain, 
+      status: 'active' 
+    }).select('mercadoPagoConfig');
+    
+    if (!store || !store.mercadoPagoConfig) {
+      return { enabled: false, available: false };
+    }
+
+    const config = store.mercadoPagoConfig;
+    const mode = config.mode || 'test';
+    const credentials = config[mode];
+    
+    // Solo retornar información pública (no las credenciales sensibles)
+    return {
+      enabled: config.enabled || false,
+      available: !!(config.enabled && credentials?.publicKey),
+      mode: mode,
+      publicKey: credentials?.publicKey || null,
+      // No enviar access token ni webhook secret al frontend
+    };
+  }
 
   async getStoreBySubdomain(subdomain: string) {
     const store = await this.tenantModel.findOne({ 
@@ -115,6 +148,7 @@ export class PublicService {
         name: p.name,
         description: p.description || '',
         price: p.price,
+        cashPrice: p.cashPrice || null,
         discount: p.discount || 0,
         images: p.images?.map(img => typeof img === 'string' ? img : img.url) || [],
         category: p.category_id && typeof p.category_id === 'object' ? {
@@ -343,5 +377,17 @@ export class PublicService {
     }
     
     return result;
+  }
+
+  async createPaymentPreference(tenantId: string, orderId: string) {
+    try {
+      // Crear la preferencia usando el PaymentService
+      const preference = await this.paymentService.createPaymentPreference(tenantId, orderId);
+      
+      return preference;
+    } catch (error) {
+      console.error('Error creating payment preference:', error);
+      throw error;
+    }
   }
 }

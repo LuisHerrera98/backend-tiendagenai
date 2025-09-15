@@ -105,11 +105,11 @@ export class ProductController {
     @CurrentUser() user: any,
   ) {
     // Validar permisos específicos para campos sensibles
-    if (updateProductDto.stock && !PermissionFilterUtil.hasPermission(user, Permission.PRODUCTS_STOCK)) {
+    if (updateProductDto.stock && !PermissionFilterUtil.hasPermission(user, Permission.PRODUCTS_MANAGE_STOCK)) {
       throw new ForbiddenException('No tienes permisos para editar el stock de productos');
     }
 
-    if (updateProductDto.discount !== undefined && !PermissionFilterUtil.hasPermission(user, Permission.PRODUCTS_DISCOUNTS)) {
+    if (updateProductDto.discount !== undefined && !PermissionFilterUtil.hasPermission(user, Permission.PRODUCTS_MANAGE_DISCOUNTS)) {
       throw new ForbiddenException('No tienes permisos para editar los descuentos de productos');
     }
 
@@ -136,7 +136,7 @@ export class ProductController {
   }
 
   @Patch(':id/increment/:sizeId')
-  @RequirePermissions(Permission.PRODUCTS_STOCK)
+  @RequirePermissions(Permission.PRODUCTS_MANAGE_STOCK)
   async incrementQuantity(
     @TenantId() tenantId: string,
     @Param('id') id: string,
@@ -146,7 +146,7 @@ export class ProductController {
   }
 
   @Patch(':id/decrement/:sizeId')
-  @RequirePermissions(Permission.PRODUCTS_STOCK)
+  @RequirePermissions(Permission.PRODUCTS_MANAGE_STOCK)
   async decrementQuantity(
     @TenantId() tenantId: string,
     @Param('id') id: string,
@@ -156,7 +156,7 @@ export class ProductController {
   }
 
   @Get('inversion')
-  @RequirePermissions(Permission.PRODUCTS_COSTS)
+  @RequirePermissions(Permission.PRODUCTS_VIEW_COSTS)
   async getInversion(@TenantId() tenantId: string) {
     return this.productService.getInversion(tenantId);
   }

@@ -142,6 +142,16 @@ export class AuthService {
       name: user.name,
     };
 
+    // Obtener permisos del usuario
+    let userPermissions = user.permissions || [];
+    // Si es ADMIN, darle todos los permisos
+    if (user.role === UserRole.ADMIN) {
+      userPermissions = Object.values(Permission);
+    } else if (user.role !== UserRole.CUSTOM) {
+      // Para otros roles no-custom, usar permisos por defecto
+      userPermissions = DEFAULT_PERMISSIONS[user.role] || [];
+    }
+
     return {
       access_token: this.jwtService.sign(payload),
       user: {
@@ -149,6 +159,7 @@ export class AuthService {
         email: user.email,
         name: user.name,
         role: user.role,
+        permissions: userPermissions,
         currentTenantId: user.currentTenantId?.toString(),
         tenants: tenants.map(t => ({
           id: t._id.toString(),
@@ -183,7 +194,7 @@ export class AuthService {
     await user.save();
 
     console.log('📧 Sending password reset code to:', email);
-    await this.emailService.sendPasswordResetCode(email, resetCode, user.name);
+    await this.emailService.sendPasswordResetCodeLegacy(email, resetCode, user.name);
 
     return { message: 'Si el email existe, recibirás un código para restablecer tu contraseña', success: true };
   }

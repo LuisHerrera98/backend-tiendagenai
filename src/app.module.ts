@@ -20,6 +20,8 @@ import { UserModule } from './user/user.module';
 import { HealthModule } from './health/health.module';
 import { PublicModule } from './public/public.module';
 import { OrderModule } from './order/order.module';
+import { PaymentModule } from './payment/payment.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -47,6 +49,8 @@ import { OrderModule } from './order/order.module';
     ClientCreditModule,
     PublicModule,
     OrderModule,
+    PaymentModule,
+    EmailModule,
   ],
   controllers: [],
   providers: [],

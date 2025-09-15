@@ -18,10 +18,10 @@ export class ExchangeService {
     private clientCreditService: ClientCreditService,
   ) {}
 
-  async create(createExchangeDto: CreateExchangeDto) {
+  async create(tenantId: string, createExchangeDto: CreateExchangeDto) {
     try {
       // 1. Obtener la venta original
-      const originalSell = await this.sellModel.findById(createExchangeDto.original_sell_id)
+      const originalSell = await this.sellModel.findOne({ _id: createExchangeDto.original_sell_id, tenantId })
         .populate('dateSell_id');
       
       if (!originalSell) {
@@ -29,7 +29,7 @@ export class ExchangeService {
       }
 
       // 2. Obtener el producto nuevo
-      const newProduct = await this.productModel.findById(createExchangeDto.new_product_id);
+      const newProduct = await this.productModel.findOne({ _id: createExchangeDto.new_product_id, tenantId });
       if (!newProduct) {
         throw new NotFoundException('Producto nuevo no encontrado');
       }
@@ -42,7 +42,8 @@ export class ExchangeService {
 
       // 4. Encontrar el producto original para devolver stock
       const originalProduct = await this.productModel.findOne({
-        name: originalSell.product_name
+        name: originalSell.product_name,
+        tenantId
       });
 
       if (!originalProduct) {
@@ -69,7 +70,8 @@ export class ExchangeService {
         new_images: newProduct.images,
         price_difference: priceDifference,
         payment_method_difference: createExchangeDto.payment_method_difference || 'no_aplica',
-        notes: createExchangeDto.notes || ''
+        notes: createExchangeDto.notes || '',
+        tenantId
       });
 
       const savedExchange = await exchange.save();
@@ -116,11 +118,12 @@ export class ExchangeService {
         
         // Buscar o crear fecha de venta para hoy
         const DateSell = this.sellModel.db.model('DateSell');
-        let dateSell = await DateSell.findOne({ name: todayStr });
+        let dateSell = await DateSell.findOne({ name: todayStr, tenantId });
         if (!dateSell) {
           dateSell = new DateSell({
             name: todayStr,
             date: today,
+            tenantId
           });
           await dateSell.save();
         }
@@ -152,6 +155,7 @@ export class ExchangeService {
           }],
           exchange_count: (originalSell.exchange_count || 0) + 1,
           createdAt: now, // Timestamp completo para ordenamiento correcto
+          tenantId
         });
 
         await newSell.save();
@@ -250,9 +254,9 @@ export class ExchangeService {
     }
   }
 
-  async findAll(startDate?: string, endDate?: string) {
+  async findAll(tenantId: string, startDate?: string, endDate?: string) {
     try {
-      const query: any = {};
+      const query: any = { tenantId };
       
       if (startDate || endDate) {
         const dateQuery: any = {};
@@ -278,9 +282,9 @@ export class ExchangeService {
     }
   }
 
-  async findOne(id: string) {
+  async findOne(tenantId: string, id: string) {
     try {
-      const exchange = await this.exchangeModel.findById(id)
+      const exchange = await this.exchangeModel.findOne({ _id: id, tenantId })
         .populate('original_sell_id');
       
       if (!exchange) {
@@ -293,9 +297,9 @@ export class ExchangeService {
     }
   }
 
-  async update(id: string, updateExchangeDto: UpdateExchangeDto) {
+  async update(tenantId: string, id: string, updateExchangeDto: UpdateExchangeDto) {
     try {
-      const exchange = await this.exchangeModel.findByIdAndUpdate(id, updateExchangeDto, { new: true })
+      const exchange = await this.exchangeModel.findOneAndUpdate({ _id: id, tenantId }, updateExchangeDto, { new: true })
         .populate('original_sell_id');
       
       if (!exchange) {
@@ -311,9 +315,9 @@ export class ExchangeService {
     }
   }
 
-  async remove(id: string) {
+  async remove(tenantId: string, id: string) {
     try {
-      const exchange = await this.exchangeModel.findById(id);
+      const exchange = await this.exchangeModel.findOne({ _id: id, tenantId });
       
       if (!exchange) {
         throw new NotFoundException('Cambio no encontrado');
@@ -323,7 +327,8 @@ export class ExchangeService {
       if (exchange.status === 'completado') {
         // Revertir stock del producto original (quitar la devolución)
         const originalProduct = await this.productModel.findOne({
-          name: exchange.original_product_name
+          name: exchange.original_product_name,
+          tenantId
         });
 
         if (originalProduct) {
@@ -353,7 +358,7 @@ export class ExchangeService {
         );
       }
 
-      await this.exchangeModel.findByIdAndDelete(id);
+      await this.exchangeModel.findOneAndDelete({ _id: id, tenantId });
       
       return {
         message: 'Cambio eliminado exitosamente y stock revertido',
@@ -363,9 +368,9 @@ export class ExchangeService {
     }
   }
 
-  async getExchangeStats(startDate?: string, endDate?: string) {
+  async getExchangeStats(tenantId: string, startDate?: string, endDate?: string) {
     try {
-      const exchanges = await this.findAll(startDate, endDate);
+      const exchanges = await this.findAll(tenantId, startDate, endDate);
       
       const stats = {
         totalExchanges: exchanges.length,
@@ -385,11 +390,12 @@ export class ExchangeService {
     }
   }
 
-  async createMassiveExchange(createMassiveExchangeDto: CreateMassiveExchangeDto) {
+  async createMassiveExchange(tenantId: string, createMassiveExchangeDto: CreateMassiveExchangeDto) {
     try {
       // 1. Obtener todas las ventas originales
       const originalSales = await this.sellModel.find({
-        _id: { $in: createMassiveExchangeDto.original_sales.map(s => s.sale_id) }
+        _id: { $in: createMassiveExchangeDto.original_sales.map(s => s.sale_id) },
+        tenantId
       }).populate('dateSell_id');
 
       if (originalSales.length !== createMassiveExchangeDto.original_sales.length) {
@@ -405,7 +411,7 @@ export class ExchangeService {
       // 3. Obtener productos nuevos y verificar stock
       const newProducts = [];
       for (const newProductDto of createMassiveExchangeDto.new_products) {
-        const product = await this.productModel.findById(newProductDto.product_id);
+        const product = await this.productModel.findOne({ _id: newProductDto.product_id, tenantId });
         if (!product) {
           throw new NotFoundException(`Producto ${newProductDto.product_name} no encontrado`);
         }
@@ -451,7 +457,8 @@ export class ExchangeService {
         exchange_time: new Date().toTimeString().slice(0, 5),
         notes: createMassiveExchangeDto.notes || `Cambio masivo: ${originalSales.length} productos originales por ${newProducts.length} productos nuevos`,
         status: 'completado',
-        exchange_type: 'massive'
+        exchange_type: 'massive',
+        tenantId
       });
 
       const savedExchange = await exchange.save();
@@ -459,7 +466,8 @@ export class ExchangeService {
       // 6. Actualizar stock - devolver productos originales
       for (const originalSale of originalSales) {
         const originalProduct = await this.productModel.findOne({
-          name: originalSale.product_name
+          name: originalSale.product_name,
+          tenantId
         });
 
         if (originalProduct) {
@@ -505,11 +513,12 @@ export class ExchangeService {
       
       // Buscar o crear fecha de venta para hoy
       const DateSell = this.sellModel.db.model('DateSell');
-      let dateSellToday = await DateSell.findOne({ name: todayStr });
+      let dateSellToday = await DateSell.findOne({ name: todayStr, tenantId });
       if (!dateSellToday) {
         dateSellToday = new DateSell({
           name: todayStr,
           date: today,
+          tenantId
         });
         await dateSellToday.save();
       }
@@ -555,7 +564,8 @@ export class ExchangeService {
             price: sale.price,
             images: sale.images || []
           })),
-          createdAt: now
+          createdAt: now,
+          tenantId
         });
 
         const savedNewSale = await newSale.save();
@@ -574,7 +584,8 @@ export class ExchangeService {
           method_payment: createMassiveExchangeDto.payment_method_difference || 'efectivo',
           exchange_type: 'diferencia_cambio',
           related_exchange_id: savedExchange._id,
-          createdAt: now
+          createdAt: now,
+          tenantId
         });
 
         if (priceDifference > 0) {

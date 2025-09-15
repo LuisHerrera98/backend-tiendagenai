@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PublicController } from './public.controller';
 import { PublicService } from './public.service';
@@ -9,8 +9,11 @@ import { Brand, BrandSchema } from '../brand/entities/brand.entity';
 import { Gender, GenderSchema } from '../gender/entities/gender.entity';
 import { Size, SizeSchema } from '../size/entities/size.entity';
 import { Color, ColorSchema } from '../color/entities/color.entity';
+import { Order, OrderSchema } from '../order/entities/order.entity';
 import { OrderModule } from '../order/order.module';
 import { EmailModule } from '../email/email.module';
+import { PaymentModule } from '../payment/payment.module';
+import { EncryptionService } from '../common/services/encryption.service';
 
 @Module({
   imports: [
@@ -22,11 +25,13 @@ import { EmailModule } from '../email/email.module';
       { name: Gender.name, schema: GenderSchema },
       { name: Size.name, schema: SizeSchema },
       { name: Color.name, schema: ColorSchema },
+      { name: Order.name, schema: OrderSchema },
     ]),
     OrderModule,
     EmailModule,
+    forwardRef(() => PaymentModule),
   ],
   controllers: [PublicController],
-  providers: [PublicService]
+  providers: [PublicService, EncryptionService]
 })
 export class PublicModule {}

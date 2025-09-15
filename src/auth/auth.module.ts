@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { AuthTenantService } from './auth-tenant.service';
 import { AuthController } from './auth.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from '../user/entities/user.entity';
@@ -28,7 +29,7 @@ import { EmailService } from './email.service';
     ]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy, EmailService],
-  exports: [AuthService, JwtModule],
+  providers: [AuthService, AuthTenantService, LocalStrategy, JwtStrategy, EmailService],
+  exports: [AuthService, AuthTenantService, JwtModule, EmailService],
 })
 export class AuthModule {}
