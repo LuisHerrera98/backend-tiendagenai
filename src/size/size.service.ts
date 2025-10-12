@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSizeDto } from './dto/create-size.dto';
 import { CreateMultipleSizesDto } from './dto/create-multiple-sizes.dto';
 import { UpdateSizeDto } from './dto/update-size.dto';
@@ -155,13 +155,31 @@ export class SizeService {
 
   async update(tenantId: string, id: string, updateSizeDto: UpdateSizeDto) {
     try {
+      const currentSize = await this.sizeModel.findOne({ _id: id, tenantId });
+      if (!currentSize) {
+        throw new NotFoundException('Talla no encontrada');
+      }
+
+      // 🔒 BLOQUEAR edición de nombre si tiene productos asignados
+      if (updateSizeDto.name && updateSizeDto.name.toUpperCase() !== currentSize.name) {
+        const productsWithSize = await this.productModel.countDocuments({
+          'stock.size_id': id,
+          tenantId
+        });
+
+        if (productsWithSize > 0) {
+          throw new ConflictException({
+            message: `No se puede editar "${currentSize.name}": ${productsWithSize} producto(s) la usa(n)`,
+            error: 'SIZE_IN_USE',
+            statusCode: 409,
+            productsCount: productsWithSize,
+            canEdit: false
+          });
+        }
+      }
+
       // Si se está actualizando el nombre o la categoría, verificar duplicados
       if (updateSizeDto.name || updateSizeDto.category_id) {
-        const currentSize = await this.sizeModel.findOne({ _id: id, tenantId });
-        if (!currentSize) {
-          throw new NotFoundException('Talla no encontrada');
-        }
-
         const nameToCheck = updateSizeDto.name?.toUpperCase() || currentSize.name;
         const categoryToCheck = updateSizeDto.category_id || currentSize.category_id;
 
@@ -220,14 +238,14 @@ export class SizeService {
       });
 
       if (productsWithSize > 0) {
-        // En lugar de lanzar error, devolver respuesta con información
-        return {
-          success: false,
-          canDelete: false,
-          message: `No se puede eliminar la talla "${size.name}" porque hay ${productsWithSize} producto(s) que la están usando. Primero debes eliminar o modificar esos productos.`,
+        // Lanzar excepción 409 Conflict cuando la talla está en uso
+        throw new ConflictException({
+          message: `No se puede eliminar "${size.name}": ${productsWithSize} producto(s) la usa(n)`,
+          error: 'SIZE_IN_USE',
+          statusCode: 409,
           productsCount: productsWithSize,
-          size
-        };
+          canDelete: false
+        });
       }
       
       await this.sizeModel.findOneAndDelete({ _id: id, tenantId });
