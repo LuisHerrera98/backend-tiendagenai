@@ -7,6 +7,7 @@ import { Size, SizeSchema } from '../size/entities/size.entity';
 import { Brand, BrandSchema } from '../brand/entities/brand.entity';
 import { Type, TypeSchema } from '../type/entities/type.entity';
 import { Gender, GenderSchema } from '../gender/entities/gender.entity';
+import { Category, CategorySchema } from '../category/entities/category.entity';
 import { FileModule } from 'src/file/file.module';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 
@@ -17,7 +18,8 @@ import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
       { name: Size.name, schema: SizeSchema },
       { name: Brand.name, schema: BrandSchema },
       { name: Type.name, schema: TypeSchema },
-      { name: Gender.name, schema: GenderSchema }
+      { name: Gender.name, schema: GenderSchema },
+      { name: Category.name, schema: CategorySchema }
     ]),
     FileModule,
     CloudinaryModule

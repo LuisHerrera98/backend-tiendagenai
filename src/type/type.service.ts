@@ -3,6 +3,7 @@ import { CreateTypeDto } from './dto/create-type.dto';
 import { UpdateTypeDto } from './dto/update-type.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Type } from './entities/type.entity';
+import { Product } from '../product/entities/product.entity';
 import { Model } from 'mongoose';
 
 @Injectable()
@@ -10,7 +11,9 @@ export class TypeService {
 
   constructor(
     @InjectModel(Type.name)
-    private readonly typeModel: Model<Type>
+    private readonly typeModel: Model<Type>,
+    @InjectModel(Product.name)
+    private readonly productModel: Model<Product>
   ) {}
 
   async create(tenantId: string, createTypeDto: CreateTypeDto) {
@@ -37,7 +40,23 @@ export class TypeService {
   async findAll(tenantId: string) {
     try {
       const types = await this.typeModel.find({ tenantId }).sort({ name: 1 });
-      return types;
+
+      // Agregar contador de productos por tipo
+      const typesWithCount = await Promise.all(
+        types.map(async (type) => {
+          const productsCount = await this.productModel.countDocuments({
+            model_name: type.name,
+            tenantId
+          });
+
+          return {
+            ...type.toObject(),
+            productsCount
+          };
+        })
+      );
+
+      return typesWithCount;
     } catch (error) {
       throw new BadRequestException('Error al obtener los tipos: ' + error.message);
     }
@@ -94,15 +113,37 @@ export class TypeService {
 
   async remove(tenantId: string, id: string) {
     try {
-      const type = await this.typeModel.findOneAndDelete({ _id: id, tenantId });
-      
+      // Verificar que el tipo existe
+      const type = await this.typeModel.findOne({ _id: id, tenantId });
+
       if (!type) {
         throw new NotFoundException('Tipo no encontrado');
       }
-      
-      return { message: 'Tipo eliminado exitosamente', type };
+
+      // Verificar si hay productos asociados a este tipo
+      const productsCount = await this.productModel.countDocuments({
+        model_name: type.name,
+        tenantId
+      });
+
+      if (productsCount > 0) {
+        throw new BadRequestException({
+          message: `No se puede eliminar el tipo "${type.name}" porque tiene ${productsCount} producto(s) asociado(s)`,
+          error: 'TYPE_HAS_PRODUCTS',
+          statusCode: 400,
+          productsCount
+        });
+      }
+
+      // Eliminar el tipo
+      await this.typeModel.findOneAndDelete({ _id: id, tenantId });
+
+      return {
+        message: 'Tipo eliminado exitosamente',
+        type
+      };
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       }
       throw new BadRequestException('Error al eliminar el tipo: ' + error.message);

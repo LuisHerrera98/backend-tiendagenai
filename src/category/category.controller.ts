@@ -20,6 +20,16 @@ export class CategoryController {
     return this.categoryService.findAll(tenantId);
   }
 
+  @Get('tree/hierarchy')
+  findTree(@TenantId() tenantId: string) {
+    return this.categoryService.findTree(tenantId);
+  }
+
+  @Get(':id/subcategories')
+  getAllSubcategoryIds(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.categoryService.getAllSubcategoryIds(tenantId, id);
+  }
+
   @Get(':id')
   findOne(@TenantId() tenantId: string, @Param('id') id: string) {
     return this.categoryService.findOne(tenantId, id);

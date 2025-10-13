@@ -78,6 +78,16 @@ export class PublicController {
     return this.publicService.getStoreCategories(store.id);
   }
 
+  @Get('categories-tree/:subdomain')
+  async getStoreCategoriesTree(@Param('subdomain') subdomain: string) {
+    const store = await this.publicService.getStoreBySubdomain(subdomain);
+    if (!store) {
+      throw new NotFoundException('Tienda no encontrada');
+    }
+
+    return this.publicService.getStoreCategoriesTree(store.id);
+  }
+
   @Get('filters/:subdomain/:categoryId')
   async getStoreFilters(
     @Param('subdomain') subdomain: string,

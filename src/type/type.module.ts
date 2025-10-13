@@ -3,6 +3,7 @@ import { TypeService } from './type.service';
 import { TypeController } from './type.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Type, TypeSchema } from './entities/type.entity';
+import { Product, ProductSchema } from '../product/entities/product.entity';
 
 @Module({
   imports: [
@@ -10,6 +11,10 @@ import { Type, TypeSchema } from './entities/type.entity';
       {
         name: Type.name,
         schema: TypeSchema,
+      },
+      {
+        name: Product.name,
+        schema: ProductSchema,
       },
     ]),
   ],

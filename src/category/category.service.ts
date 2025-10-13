@@ -65,6 +65,70 @@ export class CategoryService {
     }
   }
 
+  // Obtener árbol jerárquico para ecommerce público
+  async findTree(tenantId: string) {
+    try {
+      const allCategories = await this.categoryModel.find({ tenantId }).sort({ name: 1 });
+
+      // Separar padres e hijos
+      const parents = allCategories.filter(cat => !cat.parent_id);
+      const children = allCategories.filter(cat => cat.parent_id);
+
+      // Construir árbol
+      const tree = await Promise.all(
+        parents.map(async (parent) => {
+          const subcategories = children.filter(
+            child => child.parent_id?.toString() === parent._id.toString()
+          );
+
+          const productsCount = await this.productModel.countDocuments({
+            category_id: parent._id,
+            tenantId
+          });
+
+          const subcategoriesWithCount = await Promise.all(
+            subcategories.map(async (sub) => {
+              const subProductsCount = await this.productModel.countDocuments({
+                category_id: sub._id,
+                tenantId
+              });
+
+              return {
+                ...sub.toObject(),
+                productsCount: subProductsCount
+              };
+            })
+          );
+
+          return {
+            ...parent.toObject(),
+            productsCount,
+            subcategories: subcategoriesWithCount
+          };
+        })
+      );
+
+      return tree;
+    } catch (error) {
+      throw new BadRequestException('Error al obtener el árbol de categorías: ' + error.message);
+    }
+  }
+
+  // Obtener todas las subcategorías de una categoría (incluyendo la categoría misma)
+  async getAllSubcategoryIds(tenantId: string, categoryId: string): Promise<string[]> {
+    try {
+      const subcategories = await this.categoryModel.find({
+        parent_id: categoryId,
+        tenantId
+      });
+
+      const ids = [categoryId, ...subcategories.map(sub => sub._id.toString())];
+      return ids;
+    } catch (error) {
+      throw new BadRequestException('Error al obtener subcategorías: ' + error.message);
+    }
+  }
+
   async findOne(tenantId: string, id: string) {
     try {
       const category = await this.categoryModel.findOne({ _id: id, tenantId });

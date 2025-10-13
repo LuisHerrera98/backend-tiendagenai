@@ -16,6 +16,14 @@ export class Category extends Document {
   })
   tenantId: string;
 
+  @Prop({
+    type: String,
+    required: false,
+    default: null,
+    index: true
+  })
+  parent_id: string;
+
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);

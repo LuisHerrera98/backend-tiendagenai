@@ -5,6 +5,7 @@ import { UpdateSizeDto } from './dto/update-size.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Size } from './entities/size.entity';
 import { Product } from '../product/entities/product.entity';
+import { Category } from '../category/entities/category.entity';
 import { Model } from 'mongoose';
 
 @Injectable()
@@ -14,11 +15,35 @@ export class SizeService {
     @InjectModel(Size.name)
     private readonly sizeModel: Model<Size>,
     @InjectModel(Product.name)
-    private readonly productModel: Model<Product>
+    private readonly productModel: Model<Product>,
+    @InjectModel(Category.name)
+    private readonly categoryModel: Model<Category>
   ) {}
 
   async create(tenantId: string, createSizeDto: CreateSizeDto) {
     try {
+      // Verificar que la categoría sea padre (no tenga parent_id)
+      const category = await this.categoryModel.findOne({
+        _id: createSizeDto.category_id,
+        tenantId
+      });
+
+      if (!category) {
+        throw new BadRequestException({
+          message: 'Categoría no encontrada',
+          error: 'CATEGORY_NOT_FOUND',
+          statusCode: 400
+        });
+      }
+
+      if (category.parent_id) {
+        throw new BadRequestException({
+          message: 'Solo se pueden crear tallas en categorías padre. Las subcategorías heredan las tallas de su categoría padre.',
+          error: 'SUBCATEGORY_CANNOT_HAVE_SIZES',
+          statusCode: 400
+        });
+      }
+
       const sizeData = {
         ...createSizeDto,
         name: createSizeDto.name?.toUpperCase(),
@@ -53,6 +78,29 @@ export class SizeService {
   async createMultiple(tenantId: string, createMultipleSizesDto: CreateMultipleSizesDto) {
     try {
       const { category_id, sizes } = createMultipleSizesDto;
+
+      // Verificar que la categoría sea padre (no tenga parent_id)
+      const category = await this.categoryModel.findOne({
+        _id: category_id,
+        tenantId
+      });
+
+      if (!category) {
+        throw new BadRequestException({
+          message: 'Categoría no encontrada',
+          error: 'CATEGORY_NOT_FOUND',
+          statusCode: 400
+        });
+      }
+
+      if (category.parent_id) {
+        throw new BadRequestException({
+          message: 'Solo se pueden crear tallas en categorías padre. Las subcategorías heredan las tallas de su categoría padre.',
+          error: 'SUBCATEGORY_CANNOT_HAVE_SIZES',
+          statusCode: 400
+        });
+      }
+
       const createdSizes = [];
       const errors = [];
       const skipped = [];
@@ -126,12 +174,29 @@ export class SizeService {
 
   async findAllByCategory(tenantId: string, categoryId: string) {
     try {
+      // Verificar si la categoría existe y si tiene parent_id
+      const category = await this.categoryModel.findOne({
+        _id: categoryId,
+        tenantId
+      });
+
+      if (!category) {
+        throw new NotFoundException('Categoría no encontrada');
+      }
+
+      // Si la categoría tiene parent_id, buscar tallas del padre
+      const searchCategoryId = category.parent_id || categoryId;
+
       const sizes = await this.sizeModel
-        .find({ category_id: categoryId, tenantId })
+        .find({ category_id: searchCategoryId, tenantId })
         .populate('category_id', 'name')
         .sort({ name: 1 });
+
       return sizes;
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       throw new BadRequestException('Error al obtener las tallas por categoría: ' + error.message);
     }
   }

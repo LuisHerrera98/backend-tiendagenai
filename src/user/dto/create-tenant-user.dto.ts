@@ -32,10 +32,6 @@ export class CreateTenantUserDto {
   @IsOptional()
   address?: string;
 
-  @IsString()
-  @IsOptional()
-  employeeCode?: string;
-
   @IsBoolean()
   @IsOptional()
   sendInviteEmail?: boolean; // Si enviar email de invitación

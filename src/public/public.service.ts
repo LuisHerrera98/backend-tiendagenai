@@ -92,13 +92,29 @@ export class PublicService {
       page: number;
     },
   ) {
-    const query: any = { 
-      tenantId, 
-      active: true 
+    const query: any = {
+      tenantId,
+      active: true
     };
 
     if (filters.category) {
-      query.category_id = filters.category;
+      // Buscar subcategorías de esta categoría
+      const subcategories = await this.categoryModel
+        .find({ parent_id: filters.category, tenantId })
+        .select('_id')
+        .lean();
+
+      if (subcategories.length > 0) {
+        // Si tiene subcategorías, incluir la categoría padre + subcategorías
+        const categoryIds = [
+          filters.category,
+          ...subcategories.map(sub => sub._id.toString())
+        ];
+        query.category_id = { $in: categoryIds };
+      } else {
+        // Si no tiene subcategorías, buscar solo por esa categoría
+        query.category_id = filters.category;
+      }
     }
 
     if (filters.brand) {
@@ -239,6 +255,32 @@ export class PublicService {
     return categories.map(c => ({
       id: c._id.toString(),
       name: c.name,
+    }));
+  }
+
+  async getStoreCategoriesTree(tenantId: string) {
+    // Obtener todas las categorías
+    const allCategories = await this.categoryModel
+      .find({ tenantId })
+      .sort({ name: 1 })
+      .lean();
+
+    // Separar padres e hijos
+    const parents = allCategories.filter(cat => !cat.parent_id);
+    const children = allCategories.filter(cat => cat.parent_id);
+
+    // Construir el árbol
+    return parents.map(parent => ({
+      id: parent._id.toString(),
+      _id: parent._id.toString(),
+      name: parent.name,
+      subcategories: children
+        .filter(child => child.parent_id?.toString() === parent._id.toString())
+        .map(child => ({
+          id: child._id.toString(),
+          _id: child._id.toString(),
+          name: child.name,
+        }))
     }));
   }
 

@@ -71,12 +71,13 @@ export class UserManagementService {
       permissions,
       phone: createUserDto.phone,
       address: createUserDto.address,
-      employeeCode: createUserDto.employeeCode,
       primaryTenantId: tenantId,
       tenantIds: [tenantId],
       currentTenantId: tenantId,
       createdBy: createdByUserId,
       active: true,
+      emailVerified: true, // Usuario creado por admin no necesita verificar email
+      emailVerifiedAt: new Date(), // Marcar como verificado inmediatamente
     };
 
     // Si se proporciona contraseña, hashearla y marcar como configurada
@@ -114,6 +115,7 @@ export class UserManagementService {
       role: newUser.role,
       permissions: newUser.permissions,
       setupToken: createUserDto.sendInviteEmail ? undefined : setupToken, // Solo devolver el token si no se envió email
+      password: createUserDto.password, // Devolver contraseña en texto plano para que admin pueda dársela al empleado
       active: newUser.active,
     };
   }
@@ -137,11 +139,12 @@ export class UserManagementService {
       role: user.role,
       permissions: user.permissions,
       phone: user.phone,
-      employeeCode: user.employeeCode,
       active: user.active,
       passwordSet: user.passwordSet,
       lastLogin: user.lastLogin,
       createdAt: user['createdAt'],
+      createdBy: user.createdBy, // IMPORTANTE: Para identificar admin principal
+      deletedAt: user.deletedAt,
     }));
   }
 
@@ -168,12 +171,12 @@ export class UserManagementService {
       permissions: user.permissions,
       phone: user.phone,
       address: user.address,
-      employeeCode: user.employeeCode,
       active: user.active,
       passwordSet: user.passwordSet,
       lastLogin: user.lastLogin,
       loginHistory: user.loginHistory?.slice(-10), // Últimos 10 logins
       createdAt: user['createdAt'],
+      deletedAt: user.deletedAt,
     };
   }
 
@@ -201,6 +204,39 @@ export class UserManagementService {
       throw new NotFoundException('Usuario no encontrado');
     }
 
+    // Verificar si el usuario a editar es admin principal y quien edita también
+    const isTargetOwner = !user.createdBy && user.role === UserRole.ADMIN;
+
+    if (isTargetOwner && userId !== updatingUserId) {
+      // Verificar si quien intenta editar es también admin principal
+      const updatingUser = await this.userModel.findOne({
+        _id: updatingUserId,
+        primaryTenantId: tenantId,
+        deleted: false
+      });
+
+      const isUpdatingOwner = updatingUser && !updatingUser.createdBy && updatingUser.role === UserRole.ADMIN;
+
+      if (!isUpdatingOwner) {
+        throw new ForbiddenException('Solo el administrador principal puede editar a otros administradores principales');
+      }
+    }
+
+    // Si se intenta cambiar rol a ADMIN, verificar permisos
+    if (updateUserDto.role === UserRole.ADMIN && user.role !== UserRole.ADMIN) {
+      const updatingUser = await this.userModel.findOne({
+        _id: updatingUserId,
+        primaryTenantId: tenantId,
+        deleted: false
+      });
+
+      const isUpdatingOwner = updatingUser && !updatingUser.createdBy && updatingUser.role === UserRole.ADMIN;
+
+      if (!isUpdatingOwner) {
+        throw new ForbiddenException('Solo el administrador principal puede promocionar usuarios a administrador');
+      }
+    }
+
     // Actualizar campos permitidos
     if (updateUserDto.name !== undefined) user.name = updateUserDto.name;
     if (updateUserDto.role !== undefined) {
@@ -215,7 +251,6 @@ export class UserManagementService {
     }
     if (updateUserDto.phone !== undefined) user.phone = updateUserDto.phone;
     if (updateUserDto.address !== undefined) user.address = updateUserDto.address;
-    if (updateUserDto.employeeCode !== undefined) user.employeeCode = updateUserDto.employeeCode;
     if (updateUserDto.active !== undefined) user.active = updateUserDto.active;
 
     await user.save();
@@ -248,6 +283,24 @@ export class UserManagementService {
 
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
+    }
+
+    // Verificar si el usuario a eliminar es el admin principal (sin createdBy)
+    const isTargetOwner = !user.createdBy && user.role === UserRole.ADMIN;
+
+    if (isTargetOwner) {
+      // Verificar si quien intenta eliminar es también admin principal
+      const deletingUser = await this.userModel.findOne({
+        _id: deletingUserId,
+        primaryTenantId: tenantId,
+        deleted: false
+      });
+
+      const isDeletingOwner = deletingUser && !deletingUser.createdBy && deletingUser.role === UserRole.ADMIN;
+
+      if (!isDeletingOwner) {
+        throw new ForbiddenException('Solo el administrador principal puede eliminar a otros administradores principales');
+      }
     }
 
     // Verificar que no sea el único admin de la tienda

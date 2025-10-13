@@ -7,6 +7,7 @@ import { Size } from '../size/entities/size.entity';
 import { Brand } from '../brand/entities/brand.entity';
 import { Type } from '../type/entities/type.entity';
 import { Gender } from '../gender/entities/gender.entity';
+import { Category } from '../category/entities/category.entity';
 import { Model, ObjectId } from 'mongoose';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
@@ -24,6 +25,8 @@ export class ProductService {
     private readonly typeModel: Model<Type>,
     @InjectModel(Gender.name)
     private readonly genderModel: Model<Gender>,
+    @InjectModel(Category.name)
+    private readonly categoryModel: Model<Category>,
     private readonly cloudinaryService: CloudinaryService
   ) {}
 
@@ -434,8 +437,23 @@ export class ProductService {
         filter.active = true;
       }
 
-      // Filtro por categoría
-      if (categoryId) filter.category_id = categoryId;
+      // Filtro por categoría (incluyendo subcategorías)
+      if (categoryId) {
+        // Buscar todas las subcategorías de esta categoría
+        const subcategories = await this.categoryModel.find({
+          parent_id: categoryId,
+          tenantId
+        }).lean();
+
+        // Si tiene subcategorías, buscar productos en la categoría padre Y en todas las subcategorías
+        if (subcategories.length > 0) {
+          const categoryIds = [categoryId, ...subcategories.map(sub => sub._id.toString())];
+          filter.category_id = { $in: categoryIds };
+        } else {
+          // Si no tiene subcategorías, filtrar solo por la categoría
+          filter.category_id = categoryId;
+        }
+      }
 
       // Filtro por marca
       if (brandName) filter.brand_id = brandName;

@@ -22,10 +22,6 @@ export class UpdateTenantUserDto {
   @IsOptional()
   address?: string;
 
-  @IsString()
-  @IsOptional()
-  employeeCode?: string;
-
   @IsBoolean()
   @IsOptional()
   active?: boolean;
