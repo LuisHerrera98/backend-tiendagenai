@@ -47,18 +47,26 @@
   - ✅ Paginación integrada
   - ✅ Estado "filtros activos" visual
 
-  3. Gestión de Categorías:
+  3. Gestión de Categorías con Subcategorías (Enero 2025):
 
   - ✅ CRUD completo
+  - ✅ Sistema jerárquico con parent_id
   - ✅ Modal de creación/edición
   - ✅ Confirmación de eliminación
   - ✅ Integración con filtros de productos
+  - ✅ Menú jerárquico en tienda pública con expandir/colapsar
+  - ✅ "Ver todo" muestra productos de padre + subcategorías
 
-  4. Gestión de Talles:
+  4. Gestión de Tallas con Herencia (Enero 2025):
 
-  - ✅ Vinculados por categoría
+  - ✅ Solo se crean en categorías padre (sin parent_id)
+  - ✅ Subcategorías heredan tallas automáticamente
+  - ✅ Validación backend rechaza tallas en subcategorías (Error 400)
+  - ✅ Herencia automática en findAllByCategory()
+  - ✅ Vinculados por categoría padre
   - ✅ Gestión de stock por talle
   - ✅ Actualización dinámica en edición de productos
+  - ✅ Protección 409 Conflict si tiene productos asignados
 
   5. Sistema de Ventas Completo:
 
@@ -394,13 +402,113 @@
   - Tests automatizados
   - Dashboard ejecutivo
 
+  🏗️ SISTEMA DE CATEGORÍAS JERÁRQUICAS Y HERENCIA DE TALLAS (Enero 2025)
+
+  **Arquitectura Implementada:**
+
+  ```typescript
+  // Estructura de Categoría
+  {
+    _id: string,
+    name: string,           // "ZAPATILLAS", "REMERAS"
+    parent_id?: string,     // null = padre, string = subcategoría
+    tenantId: string
+  }
+
+  // Size vinculado solo a categoría padre
+  {
+    _id: string,
+    name: string,           // "M", "L", "42"
+    category_id: string,    // SOLO referencia a categoría PADRE
+    tenantId: string
+  }
+  ```
+
+  **Ejemplo de Jerarquía:**
+  ```
+  ZAPATILLAS (padre) → Tallas: 38, 39, 40, 41, 42, 43, 44, 45
+  ├── Zapatillas G5 → Hereda: 38-45
+  ├── Zapatillas Running → Hereda: 38-45
+  └── Zapatillas Casual → Hereda: 38-45
+  ```
+
+  **Backend - Validación en size.service.ts:**
+
+  ```typescript
+  // ✅ CREAR: Solo permite categorías padre
+  async create(tenantId, createSizeDto) {
+    const category = await this.categoryModel.findOne({
+      _id: createSizeDto.category_id,
+      tenantId
+    });
+
+    if (category.parent_id) {
+      throw new BadRequestException({
+        message: 'Solo se pueden crear tallas en categorías padre. Las subcategorías heredan las tallas de su categoría padre.',
+        error: 'SUBCATEGORY_CANNOT_HAVE_SIZES',
+        statusCode: 400
+      });
+    }
+    // ... continuar creación
+  }
+
+  // ✅ CONSULTAR: Herencia automática
+  async findAllByCategory(tenantId, categoryId) {
+    const category = await this.categoryModel.findOne({
+      _id: categoryId,
+      tenantId
+    });
+
+    // Si tiene parent_id, buscar tallas del padre
+    const searchCategoryId = category.parent_id || categoryId;
+
+    return await this.sizeModel.find({
+      category_id: searchCategoryId,
+      tenantId
+    });
+  }
+  ```
+
+  **Backend - Productos por categoría en public.service.ts:**
+
+  ```typescript
+  // Incluir subcategorías al filtrar por categoría padre
+  if (filters.category) {
+    const subcategories = await this.categoryModel
+      .find({ parent_id: filters.category, tenantId })
+      .select('_id')
+      .lean();
+
+    if (subcategories.length > 0) {
+      const categoryIds = [
+        filters.category,
+        ...subcategories.map(sub => sub._id.toString())
+      ];
+      query.category_id = { $in: categoryIds };
+    } else {
+      query.category_id = filters.category;
+    }
+  }
+  ```
+
+  **Frontend - Menú jerárquico en store-header.tsx:**
+  - Expandir/colapsar con ChevronDown
+  - "Ver todo" muestra productos de padre + subcategorías
+  - Subcategorías individuales filtran solo sus productos
+
+  **Beneficios:**
+  - 🎯 Tallas creadas una sola vez en categoría padre
+  - 🔄 Herencia automática sin duplicación
+  - 🔒 Validación robusta impide errores
+  - 💡 UX clara: subcategorías = variaciones de estilo, NO de tallas
+
   🔑 Comandos Importantes
 
   # Backend (puerto 3000)
   cd backend-ecommerce-test
   npm run start:dev
 
-  # Frontend (puerto 3001)  
+  # Frontend (puerto 3001)
   cd frontend-ecommerce-test
   npm run dev
 
@@ -409,12 +517,15 @@
   NEXT_PUBLIC_ADMIN_PASSWORD=testadmin
 
   ---
-  Última actualización: Sistema de cambio masivo implementado con manejo financiero perfecto por día.
-  Estado: Producción ready con finanzas bulletproof 🚀✨💰
+  Última actualización: Sistema de categorías jerárquicas con herencia de tallas implementado.
+  Estado: Producción ready con finanzas bulletproof + herencia automática 🚀✨💰
 
   🎯 Funcionalidades Principales Completadas:
-  
-  ✅ Gestión completa de productos, categorías y talles
+
+  ✅ Gestión completa de productos, categorías jerárquicas y tallas con herencia
+  ✅ Sistema de categorías padre/hijo con herencia automática de tallas
+  ✅ Validación backend: solo tallas en categorías padre (Error 400)
+  ✅ Menú jerárquico en tienda pública con expandir/colapsar
   ✅ Sistema de ventas con carrito multi-producto y agrupación
   ✅ Sistema de intercambios/cambios individuales y masivos
   ✅ Sistema financiero perfecto que mantiene integridad por día
