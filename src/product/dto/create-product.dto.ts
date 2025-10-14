@@ -70,4 +70,8 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   color_id: string;
+
+  @IsOptional()
+  @IsString()
+  description: string;
 }
