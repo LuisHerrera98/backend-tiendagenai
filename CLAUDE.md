@@ -1,5 +1,12 @@
 📋 Claude Code Session Summary - Ecommerce Admin System
 
+  ## ⚠️ REGLA CRÍTICA PARA CLAUDE
+  **NUNCA iniciar el servidor backend a menos que el usuario lo solicite explícitamente.**
+  - ❌ NO ejecutar: `npm run start:dev`, `npm start`, `nest start`, etc.
+  - ❌ NO usar comandos que inicien el servidor en puerto 3000
+  - ✅ SOLO el usuario decide cuándo iniciar/detener el backend
+  - 💡 Si necesitas verificar que algo funciona, PREGUNTAR primero
+
   🏗️ Arquitectura del Proyecto
 
   Stack Tecnológico:
