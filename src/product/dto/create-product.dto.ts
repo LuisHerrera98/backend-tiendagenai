@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MinLength, IsBoolean, IsNumber, IsIn, IsArray } from 'class-validator';
+import { IsOptional, IsString, MinLength, IsBoolean, IsNumber, IsIn, IsArray, IsMongoId } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class StockItem {
@@ -64,6 +64,7 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsArray()
+  @IsMongoId({ each: true })
   genders: string[];
 
   @IsOptional()

@@ -165,6 +165,8 @@ export class PublicService {
         description: p.description || '',
         price: p.price,
         cashPrice: p.cashPrice || null,
+        installmentText: p.installmentText || null,
+        withoutStock: p.withoutStock || false,
         discount: p.discount || 0,
         images: p.images?.map(img => typeof img === 'string' ? img : img.url) || [],
         category: p.category_id && typeof p.category_id === 'object' ? {
@@ -203,6 +205,8 @@ export class PublicService {
       description: product.description || '',
       price: product.price,
       cashPrice: product.cashPrice || null,
+      installmentText: product.installmentText || null,
+      withoutStock: product.withoutStock || false,
       cost: product.cost,
       discount: product.discount || 0,
       code: product.code,

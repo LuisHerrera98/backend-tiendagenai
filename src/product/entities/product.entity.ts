@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
+import * as mongoose from 'mongoose';
 
 @Schema({ versionKey: false })
 export class Product extends Document{
@@ -141,11 +142,10 @@ export class Product extends Document{
 
     @Prop({
         required: false,
-        type: [String],
-        enum: ['hombre', 'mujer', 'niño', 'niña'],
+        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Gender' }],
         default: []
     })
-    genders: string[];
+    genders: mongoose.Schema.Types.ObjectId[];
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product)

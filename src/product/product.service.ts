@@ -99,10 +99,23 @@ export class ProductService {
         return img;
       }) || [];
 
+      // Validar que los gender IDs existen si se proporcionan
+      if (createProductDto.genders && createProductDto.genders.length > 0) {
+        const genderIds = createProductDto.genders;
+        const existingGenders = await this.genderModel.find({
+          _id: { $in: genderIds },
+          tenantId
+        });
+
+        if (existingGenders.length !== genderIds.length) {
+          throw new BadRequestException('Uno o más IDs de género no son válidos');
+        }
+      }
+
       // Forzar active a true si no viene o viene como false
       // Esto asegura que SIEMPRE los productos nuevos estén activos
       const isActive = createProductDto.active === true ? true : true; // Siempre true para nuevos productos
-      
+
       // Si es tipo 'unit', crear un stock único con talle "unit"
       let processedStock = [];
       if (createProductDto.stockType === 'unit') {
@@ -160,12 +173,16 @@ export class ProductService {
       throw new NotFoundException('Producto no encontrado');
     }
  
-    const { name, price, cost, stock, stockType, active, type_id, brand_id, category_id, images, discount, gender_id, genders, color_id } = updateProductDto;
- 
+    const { name, price, cost, cashPrice, stock, stockType, active, type_id, brand_id, category_id, images, discount, gender_id, genders, color_id, description, installmentText, withoutStock } = updateProductDto;
+
     const update: any = {};
     if (name) update.name = name.toUpperCase();
     if (price) update.price = price;
     if (cost) update.cost = cost;
+    if (cashPrice !== undefined) update.cashPrice = cashPrice;
+    if (description !== undefined) update.description = description;
+    if (installmentText !== undefined) update.installmentText = installmentText;
+    if (withoutStock !== undefined) update.withoutStock = withoutStock;
     
     // Manejar stock según el tipo
     if (stock) {
@@ -192,7 +209,21 @@ export class ProductService {
     if (type_id) update.type_id = type_id;
     if (brand_id) update.brand_id = brand_id;
     if (gender_id) update.gender_id = gender_id;
-    if (genders) update.genders = genders;
+
+    // Validar gender IDs si se proporcionan
+    if (genders) {
+      const existingGenders = await this.genderModel.find({
+        _id: { $in: genders },
+        tenantId
+      });
+
+      if (existingGenders.length !== genders.length) {
+        throw new BadRequestException('Uno o más IDs de género no son válidos');
+      }
+
+      update.genders = genders;
+    }
+
     if (color_id !== undefined) update.color_id = color_id;
     if (category_id) update.category_id = category_id;
     if (images) {
