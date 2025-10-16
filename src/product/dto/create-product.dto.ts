@@ -64,7 +64,6 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsArray()
-  @IsIn(['hombre', 'mujer', 'niño', 'niña'], { each: true })
   genders: string[];
 
   @IsOptional()
@@ -74,4 +73,12 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   description: string;
+
+  @IsOptional()
+  @IsString()
+  installmentText: string;
+
+  @IsOptional()
+  @IsBoolean()
+  withoutStock: boolean;
 }

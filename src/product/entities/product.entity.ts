@@ -121,6 +121,17 @@ export class Product extends Document{
     @Prop({
         required: false
     })
+    installmentText: string;
+
+    @Prop({
+        required: false,
+        default: false
+    })
+    withoutStock: boolean;
+
+    @Prop({
+        required: false
+    })
     brand_name: string;
 
     @Prop({
