@@ -22,6 +22,7 @@ import { PublicModule } from './public/public.module';
 import { OrderModule } from './order/order.module';
 import { PaymentModule } from './payment/payment.module';
 import { EmailModule } from './email/email.module';
+import { FacebookMarketplaceModule } from './facebook-marketplace/facebook-marketplace.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { EmailModule } from './email/email.module';
     OrderModule,
     PaymentModule,
     EmailModule,
+    FacebookMarketplaceModule,
   ],
   controllers: [],
   providers: [],
