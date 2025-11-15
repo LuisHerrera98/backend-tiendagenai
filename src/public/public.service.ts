@@ -154,7 +154,7 @@ export class PublicService {
       .populate('brand_id', 'name')
       .skip(skip)
       .limit(filters.limit)
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1, _id: -1 });
 
     const total = await this.productModel.countDocuments(query);
 

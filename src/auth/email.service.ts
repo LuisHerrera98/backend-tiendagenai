@@ -71,8 +71,6 @@ export class EmailService {
 
   // Método original para compatibilidad
   async sendPasswordResetCodeLegacy(email: string, code: string, userName?: string) {
-    console.log('📧 Preparando email con código:', { email, code, userName });
-    
     const mailOptions = {
       from: '"TiendaGenAI" <genai.for.business.sa@gmail.com>',
       to: email,
@@ -106,9 +104,7 @@ export class EmailService {
     };
 
     try {
-      console.log('📨 Enviando email con nodemailer...');
       const result = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Email enviado exitosamente:', result.messageId);
       return true;
     } catch (error) {
       console.error('❌ Error sending password reset code:', error);
@@ -274,7 +270,6 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail(mailOptions);
-      console.log('Email de invitación enviado a:', email);
     } catch (error) {
       console.error('Error enviando email de invitación:', error);
       throw error;
@@ -316,7 +311,6 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail(mailOptions);
-      console.log('Email de primer login enviado a:', email);
     } catch (error) {
       console.error('Error enviando email de primer login:', error);
       throw error;
@@ -358,7 +352,6 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail(mailOptions);
-      console.log('Código de recuperación enviado a:', email);
     } catch (error) {
       console.error('Error enviando código de recuperación:', error);
       throw error;
@@ -419,7 +412,6 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail(mailOptions);
-      console.log('Email de restablecimiento enviado a:', email);
     } catch (error) {
       console.error('Error enviando email de restablecimiento:', error);
       throw error;

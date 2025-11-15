@@ -78,8 +78,6 @@ export class PaymentController {
     @Query('data.id') dataId: string,
     @Body() body: any,
   ) {
-    console.log('Webhook received:', { tenantId, type, dataId, signature });
-    
     // MercadoPago envía el tipo y el ID en query params
     await this.paymentService.processWebhookNotification(
       tenantId,

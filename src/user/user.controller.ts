@@ -36,8 +36,6 @@ export class UserController {
 
   @Post('create-tenant')
   async createTenant(@Request() req, @Body() createUserTenantDto: CreateUserTenantDto) {
-    console.log('UserController.createTenant - userId:', req.user.sub);
-    console.log('UserController.createTenant - data:', createUserTenantDto);
     return this.userService.createUserTenant(req.user.sub, createUserTenantDto);
   }
 

@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 import * as mongoose from 'mongoose';
 
-@Schema({ versionKey: false })
+@Schema({ versionKey: false, timestamps: true })
 export class Product extends Document{
     @Prop({
         unique: false,
@@ -158,3 +158,6 @@ ProductSchema.index({ active: 1, category_id: 1 });
 ProductSchema.index({ brand_id: 1, type_id: 1 });
 ProductSchema.index({ tenantId: 1, code: 1 }, { unique: true });
 ProductSchema.index({ tenantId: 1, active: 1 });
+
+// Index for sorting by creation date (most recent first)
+ProductSchema.index({ createdAt: -1, _id: -1 });

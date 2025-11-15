@@ -308,8 +308,6 @@ export class PaymentService {
       };
 
       await order.save();
-
-      console.log(`Payment ${paymentId} processed for order ${order.orderNumber}: ${paymentInfo.status}`);
     } catch (error) {
       console.error('Error processing payment notification:', error);
       throw error;

@@ -28,7 +28,6 @@ export class EmailService {
           items: orderData.items,
         },
       });
-      console.log('Email de confirmación enviado al cliente:', email);
     } catch (error) {
       console.error('Error enviando email al cliente:', error);
     }
@@ -63,7 +62,6 @@ export class EmailService {
           notes: orderData.notes,
         },
       });
-      console.log('Email de notificación enviado al dueño:', ownerEmail);
     } catch (error) {
       console.error('Error enviando email al dueño:', error);
     }

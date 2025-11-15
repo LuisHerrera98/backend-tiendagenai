@@ -150,15 +150,7 @@ export class ProductService {
         gender: undefined
       };
 
-      console.log('=== DATOS FINALES A GUARDAR ===');
-      console.log('ProductData completo:', JSON.stringify(productData, null, 2));
-      console.log('cashPrice final:', productData.cashPrice);
-      console.log('price final:', productData.price);
-      console.log('cost final:', productData.cost);
-
       const product = await this.productModel.create(productData);
-      console.log('=== PRODUCTO CREADO EXITOSAMENTE ===');
-      console.log('ID del producto:', product._id);
       return product;
     } catch (error) {
       console.error('ProductService.create - Error:', error);
@@ -521,9 +513,9 @@ export class ProductService {
         this.productModel.find(filter)
           .skip(skip)
           .limit(limit)
-          .sort({ _id: -1 })
+          .sort({ createdAt: -1, _id: -1 })
           .lean(),
-        
+
         this.productModel.countDocuments(filter)
       ]);
 

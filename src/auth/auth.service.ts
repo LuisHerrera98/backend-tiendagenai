@@ -185,15 +185,12 @@ export class AuthService {
 
     // Generar código de 6 dígitos
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    console.log('🔐 Password reset code generated:', resetCode);
-    
+
     user.resetPasswordCode = resetCode;
     user.resetPasswordToken = uuidv4(); // Mantener token para compatibilidad
     user.resetPasswordExpires = new Date(Date.now() + 900000); // 15 minutos
     await user.save();
 
-    console.log('📧 Sending password reset code to:', email);
     await this.emailService.sendPasswordResetCodeLegacy(email, resetCode, user.name);
 
     return { message: 'Si el email existe, recibirás un código para restablecer tu contraseña', success: true };
