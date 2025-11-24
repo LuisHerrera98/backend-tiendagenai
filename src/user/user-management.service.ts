@@ -127,7 +127,7 @@ export class UserManagementService {
     const users = await this.userModel.find({
       primaryTenantId: tenantId,
       deleted: { $ne: true }, // Excluir usuarios eliminados
-      _id: { $ne: requestingUserId } // Excluir al usuario que hace la petición
+      // NO excluir al usuario actual - se necesita para verificar si es admin principal
     }).select('-password -setupToken -resetPasswordToken -resetPasswordCode');
 
     return users.map(user => ({
