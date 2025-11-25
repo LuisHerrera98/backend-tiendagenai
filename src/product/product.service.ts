@@ -484,12 +484,12 @@ export class ProductService {
       // Filtro por modelo
       if (modelName) filter.type_id = modelName;
 
-      // Filtro por nombre (búsqueda parcial, case insensitive)
+      // Filtro por nombre O código (búsqueda parcial, case insensitive)
       if (name) {
-        filter.name = {
-          $regex: name.toUpperCase(),
-          $options: 'i'
-        };
+        filter.$or = [
+          { name: { $regex: name.toUpperCase(), $options: 'i' } },
+          { code: { $regex: name, $options: 'i' } }
+        ];
       }
 
       // Filtro por talla (solo productos que soporten esta talla)
@@ -508,6 +508,9 @@ export class ProductService {
 
       // Filtro por color
       if (colorId) filter.color_id = colorId;
+
+      // Debug: ver el filtro que se envía a MongoDB
+      console.log('🔍 Filter:', JSON.stringify(filter, null, 2));
 
       const [products, total] = await Promise.all([
         this.productModel.find(filter)
