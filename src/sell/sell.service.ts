@@ -53,6 +53,7 @@ export class SellService {
         size_name: createSellDto.size_name,
         price: createSellDto.price, // Precio de venta real (efectivo/transferencia)
         listPrice: createSellDto.listPrice || createSellDto.price, // Precio de lista original
+        cashPrice: createSellDto.cashPrice || createSellDto.price, // Precio efectivo para ganancia
         cost: createSellDto.cost,
         images: createSellDto.images,
         method_payment: createSellDto.method_payment || 'efectivo',
@@ -233,8 +234,12 @@ export class SellService {
           no_aplica: { count: 0, total: 0 }
         },
       };
-      
-      stats.totalProfit = stats.totalRevenue - stats.totalCost;
+
+      // Ganancia siempre se calcula con cashPrice (precio efectivo) - cost
+      stats.totalProfit = activeSells.reduce((sum, sell) => {
+        const cashPrice = sell.cashPrice || sell.price; // fallback para ventas antiguas
+        return sum + (cashPrice - sell.cost);
+      }, 0);
       stats.averageSaleValue = stats.totalSales > 0 ? stats.totalRevenue / stats.totalSales : 0;
       
       // Agrupar ventas por fecha y método de pago (solo activas)
@@ -249,10 +254,11 @@ export class SellService {
             profit: 0,
           };
         }
+        const cashPrice = sell.cashPrice || sell.price; // fallback para ventas antiguas
         salesByDate[date].count++;
         salesByDate[date].revenue += sell.price;
         salesByDate[date].cost += sell.cost;
-        salesByDate[date].profit = salesByDate[date].revenue - salesByDate[date].cost;
+        salesByDate[date].profit += (cashPrice - sell.cost); // Ganancia real con cashPrice
         
         // Agregar al breakdown de métodos de pago
         const paymentMethod = sell.method_payment || 'efectivo';

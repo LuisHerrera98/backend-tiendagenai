@@ -50,6 +50,9 @@ export class Sell extends Document {
   @Prop({ required: false })
   listPrice: number; // Precio de lista original (opcional, para referencia)
 
+  @Prop({ required: false })
+  cashPrice: number; // Precio efectivo (para calcular ganancia real siempre)
+
   @Prop({ required: true })
   cost: number;
 

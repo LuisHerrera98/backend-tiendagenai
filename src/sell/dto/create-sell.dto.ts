@@ -21,6 +21,10 @@ export class CreateSellDto {
   listPrice?: number; // Precio de lista original
 
   @IsNumber()
+  @IsOptional()
+  cashPrice?: number; // Precio efectivo (para calcular ganancia)
+
+  @IsNumber()
   cost: number;
 
   @IsArray()
