@@ -30,6 +30,21 @@ export class SellController {
     return this.sellService.registerSell(tenantId, createSellDto, user);
   }
 
+  @Post('manual')
+  @RequirePermissions(Permission.SALES_CREATE)
+  registerManualSale(
+    @TenantId() tenantId: string,
+    @CurrentUser() user: any,
+    @Body() manualSaleDto: {
+      product_name: string;
+      size_name?: string;
+      price: number;
+      method_payment: string;
+    }
+  ) {
+    return this.sellService.registerManualSale(tenantId, manualSaleDto, user);
+  }
+
   @Get()
   @RequirePermissions(Permission.SALES_VIEW)
   findAll(

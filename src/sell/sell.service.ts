@@ -110,6 +110,57 @@ export class SellService {
     return this.registerSell(tenantId, createSellDto);
   }
 
+  // Registrar venta manual (sin producto del sistema)
+  async registerManualSale(tenantId: string, manualSaleDto: {
+    product_name: string;
+    size_name?: string;
+    price: number;
+    method_payment: string;
+  }, user?: any) {
+    try {
+      // Crear o encontrar la fecha de venta para hoy (en hora Argentina)
+      const today = new Date();
+      const argentinaDate = new Date(today.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+      const todayStr = argentinaDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
+      let dateSell = await this.dateSellModel.findOne({ name: todayStr, tenantId });
+      if (!dateSell) {
+        dateSell = new this.dateSellModel({
+          name: todayStr,
+          date: today,
+          tenantId
+        });
+        await dateSell.save();
+      }
+
+      // Crear la venta manual
+      const sell = new this.sellModel({
+        dateSell_id: dateSell._id,
+        product_name: manualSaleDto.product_name,
+        size_name: manualSaleDto.size_name || 'N/A',
+        price: manualSaleDto.price,
+        listPrice: manualSaleDto.price,
+        cashPrice: manualSaleDto.price,
+        cost: manualSaleDto.price, // Costo = precio para que ganancia = 0
+        images: [],
+        method_payment: manualSaleDto.method_payment || 'efectivo',
+        is_manual_sale: true,
+        registered_by: user?._id || null,
+        registered_by_name: user?.name || null,
+        tenantId
+      });
+
+      const savedSell = await sell.save();
+
+      return {
+        message: 'Venta manual registrada exitosamente',
+        sell: savedSell,
+      };
+    } catch (error) {
+      throw new BadRequestException('Error al registrar venta manual: ' + error.message);
+    }
+  }
+
   async findAll(tenantId: string, startDate?: string, endDate?: string) {
     try {
       const query: any = { tenantId };

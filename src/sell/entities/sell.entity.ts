@@ -115,6 +115,9 @@ export class Sell extends Document {
   @Prop({ default: null })
   gender_names: string; // Nombres concatenados "Hombre, Mujer"
 
+  @Prop({ default: false })
+  is_manual_sale: boolean; // Venta manual sin producto del sistema
+
   @Prop({
     default: () => new Date()
   })
