@@ -91,6 +91,31 @@ export class Sell extends Document {
   @Prop({ default: null })
   transaction_id: string; // Identificador único para agrupar ventas de la misma transacción
 
+  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
+  registered_by: Types.ObjectId; // Usuario que registró la venta
+
+  @Prop({ default: null })
+  registered_by_name: string; // Nombre del usuario (desnormalizado para consultas rápidas)
+
+  // Datos del producto desnormalizados para consultas rápidas
+  @Prop({ default: null })
+  category_id: string;
+
+  @Prop({ default: null })
+  category_name: string;
+
+  @Prop({ default: null })
+  color_id: string;
+
+  @Prop({ default: null })
+  color_name: string;
+
+  @Prop({ type: [String], default: [] })
+  genders: string[]; // Array de ObjectIds de géneros
+
+  @Prop({ default: null })
+  gender_names: string; // Nombres concatenados "Hombre, Mujer"
+
   @Prop({
     default: () => {
       const date = new Date();

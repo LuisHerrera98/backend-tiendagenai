@@ -22,8 +22,12 @@ export class SellController {
 
   @Post('register')
   @RequirePermissions(Permission.SALES_CREATE)
-  registerSell(@TenantId() tenantId: string, @Body() createSellDto: CreateSellDto) {
-    return this.sellService.registerSell(tenantId, createSellDto);
+  registerSell(
+    @TenantId() tenantId: string,
+    @CurrentUser() user: any,
+    @Body() createSellDto: CreateSellDto
+  ) {
+    return this.sellService.registerSell(tenantId, createSellDto, user);
   }
 
   @Get()

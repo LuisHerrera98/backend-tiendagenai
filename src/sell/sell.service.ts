@@ -16,7 +16,7 @@ export class SellService {
     private clientCreditService: ClientCreditService,
   ) {}
 
-  async registerSell(tenantId: string, createSellDto: CreateSellDto) {
+  async registerSell(tenantId: string, createSellDto: CreateSellDto, user?: any) {
     try {
       // Verificar que el producto existe y tiene stock
       const product = await this.productModel.findOne({ _id: createSellDto.product_id, tenantId });
@@ -57,6 +57,15 @@ export class SellService {
         images: createSellDto.images,
         method_payment: createSellDto.method_payment || 'efectivo',
         transaction_id: createSellDto.transaction_id || null,
+        registered_by: user?._id || null,
+        registered_by_name: user?.name || null,
+        // Datos del producto desnormalizados
+        category_id: createSellDto.category_id || null,
+        category_name: createSellDto.category_name || null,
+        color_id: createSellDto.color_id || null,
+        color_name: createSellDto.color_name || null,
+        genders: createSellDto.genders || [],
+        gender_names: createSellDto.gender_names || null,
         tenantId
       });
 

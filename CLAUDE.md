@@ -7,6 +7,22 @@
   - ✅ SOLO el usuario decide cuándo iniciar/detener el backend
   - 💡 Si necesitas verificar que algo funciona, PREGUNTAR primero
 
+  ## 🚀 Deploy (GitHub Actions)
+
+  El deploy está configurado con GitHub Actions. Pasos:
+
+  ```bash
+  # 1. Verificar que compila sin errores
+  npm run build
+
+  # 2. Si pasa, hacer commit y push
+  git add .
+  git commit -m "descripcion de los cambios"
+  git push
+  ```
+
+  El deploy se ejecuta automáticamente en GitHub Actions al hacer push a main.
+
   🏗️ Arquitectura del Proyecto
 
   Stack Tecnológico:

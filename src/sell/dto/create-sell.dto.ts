@@ -42,4 +42,29 @@ export class CreateSellDto {
   @IsString()
   @IsOptional()
   transaction_id?: string;
+
+  // Datos del producto para desnormalizar
+  @IsString()
+  @IsOptional()
+  category_id?: string;
+
+  @IsString()
+  @IsOptional()
+  category_name?: string;
+
+  @IsString()
+  @IsOptional()
+  color_id?: string;
+
+  @IsString()
+  @IsOptional()
+  color_name?: string;
+
+  @IsArray()
+  @IsOptional()
+  genders?: string[];
+
+  @IsString()
+  @IsOptional()
+  gender_names?: string;
 }
