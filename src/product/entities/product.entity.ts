@@ -51,6 +51,13 @@ export class Product extends Document{
 
     @Prop({
         unique: false,
+        required: false,
+        default: 25
+    })
+    listPricePercentage: number; // Porcentaje para calcular precio de lista desde precio efectivo
+
+    @Prop({
+        unique: false,
         type: Array,
         default: []
     })
