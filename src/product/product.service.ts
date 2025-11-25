@@ -509,9 +509,6 @@ export class ProductService {
       // Filtro por color
       if (colorId) filter.color_id = colorId;
 
-      // Debug: ver el filtro que se envía a MongoDB
-      console.log('🔍 Filter:', JSON.stringify(filter, null, 2));
-
       const [products, total] = await Promise.all([
         this.productModel.find(filter)
           .skip(skip)
