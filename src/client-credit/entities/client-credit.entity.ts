@@ -37,11 +37,7 @@ export class ClientCredit extends Document {
   used_at: Date; // Cuándo se usó el crédito
 
   @Prop({
-    default: () => {
-      const date = new Date();
-      date.setHours(date.getHours() - 3);
-      return date;
-    }
+    default: () => new Date()
   })
   created_at: Date;
 

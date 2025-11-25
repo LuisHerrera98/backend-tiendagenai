@@ -113,9 +113,9 @@ export class ExchangeService {
       let newSell = null;
       if (!isSameProduct) {
         const today = new Date();
-        today.setHours(today.getHours() - 3); // UTC-3
-        const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
-        
+        const argentinaDate = new Date(today.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+        const todayStr = argentinaDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
         // Buscar o crear fecha de venta para hoy
         const DateSell = this.sellModel.db.model('DateSell');
         let dateSell = await DateSell.findOne({ name: todayStr, tenantId });
@@ -130,7 +130,6 @@ export class ExchangeService {
 
         // Crear la nueva venta con timestamp más reciente
         const now = new Date();
-        now.setHours(now.getHours() - 3); // UTC-3
         now.setSeconds(now.getSeconds() + 5); // Agregar 5 segundos para que aparezca arriba
         
         // Calcular el costo ajustado para que la ganancia sea solo del producto nuevo
@@ -508,9 +507,9 @@ export class ExchangeService {
       // 3. Solo cobrar/creditar la diferencia de precio
 
       const today = new Date();
-      today.setHours(today.getHours() - 3); // UTC-3
-      const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
-      
+      const argentinaDate = new Date(today.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+      const todayStr = argentinaDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
       // Buscar o crear fecha de venta para hoy
       const DateSell = this.sellModel.db.model('DateSell');
       let dateSellToday = await DateSell.findOne({ name: todayStr, tenantId });
@@ -543,7 +542,6 @@ export class ExchangeService {
 
       // 2. Crear nuevas ventas HOY con los productos nuevos
       const now = new Date();
-      now.setHours(now.getHours() - 3); // UTC-3
       
       for (const newProductItem of newProducts) {
         // El precio y costo deben reflejar la realidad del nuevo producto

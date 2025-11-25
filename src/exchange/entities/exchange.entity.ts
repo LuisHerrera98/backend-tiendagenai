@@ -62,8 +62,7 @@ export class Exchange extends Document {
   @Prop({
     default: () => {
       const date = new Date();
-      date.setHours(date.getHours() - 3);
-      return date.toISOString().split('T')[0];
+      return date.toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }); // YYYY-MM-DD
     }
   })
   exchange_date: string;
@@ -71,10 +70,11 @@ export class Exchange extends Document {
   @Prop({
     default: () => {
       const date = new Date();
-      return date.toLocaleTimeString('es-AR', { 
-        hour: '2-digit', 
+      return date.toLocaleTimeString('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        hour: '2-digit',
         minute: '2-digit',
-        hour12: false 
+        hour12: false
       });
     }
   })

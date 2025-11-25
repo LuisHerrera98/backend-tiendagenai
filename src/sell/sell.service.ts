@@ -30,10 +30,10 @@ export class SellService {
         throw new BadRequestException('No hay stock disponible para esta talla');
       }
 
-      // Crear o encontrar la fecha de venta para hoy
+      // Crear o encontrar la fecha de venta para hoy (en hora Argentina)
       const today = new Date();
-      today.setHours(today.getHours() - 3); // UTC-3
-      const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+      const argentinaDate = new Date(today.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+      const todayStr = argentinaDate.toISOString().split('T')[0]; // YYYY-MM-DD
       
       let dateSell = await this.dateSellModel.findOne({ name: todayStr, tenantId });
       if (!dateSell) {
@@ -126,17 +126,15 @@ export class SellService {
         } else {
           // Buscar ventas por rango de fechas
           const dateQuery: any = {};
-          
+
           if (startDate) {
             const start = new Date(startDate);
-            start.setHours(start.getHours() - 3); // UTC-3
             dateQuery.$gte = start;
           }
-          
+
           if (endDate) {
             const end = new Date(endDate);
             end.setHours(23, 59, 59, 999); // Final del día
-            end.setHours(end.getHours() - 3); // UTC-3
             dateQuery.$lte = end;
           }
           

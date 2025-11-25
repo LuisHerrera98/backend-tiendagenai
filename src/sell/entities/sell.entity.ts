@@ -15,11 +15,7 @@ export class DateSell extends Document {
 
   @Prop({
     required: true,
-    default: () => {
-      const date = new Date();
-      date.setHours(date.getHours() - 3);
-      return date;
-    }
+    default: () => new Date()
   })
   date: Date;
 }
@@ -120,11 +116,7 @@ export class Sell extends Document {
   gender_names: string; // Nombres concatenados "Hombre, Mujer"
 
   @Prop({
-    default: () => {
-      const date = new Date();
-      date.setHours(date.getHours() - 3); // UTC-3
-      return date;
-    }
+    default: () => new Date()
   })
   createdAt: Date;
 }
