@@ -45,7 +45,10 @@ export class Sell extends Document {
   size_name: string;
 
   @Prop({ required: true })
-  price: number;
+  price: number; // Precio de venta real (efectivo/transferencia)
+
+  @Prop({ required: false })
+  listPrice: number; // Precio de lista original (opcional, para referencia)
 
   @Prop({ required: true })
   cost: number;

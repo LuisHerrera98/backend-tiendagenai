@@ -51,7 +51,8 @@ export class SellService {
         dateSell_id: dateSell._id,
         product_name: createSellDto.product_name,
         size_name: createSellDto.size_name,
-        price: createSellDto.price,
+        price: createSellDto.price, // Precio de venta real (efectivo/transferencia)
+        listPrice: createSellDto.listPrice || createSellDto.price, // Precio de lista original
         cost: createSellDto.cost,
         images: createSellDto.images,
         method_payment: createSellDto.method_payment || 'efectivo',

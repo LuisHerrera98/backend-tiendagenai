@@ -14,7 +14,11 @@ export class CreateSellDto {
   size_name: string;
 
   @IsNumber()
-  price: number;
+  price: number; // Precio de venta real (efectivo/transferencia)
+
+  @IsNumber()
+  @IsOptional()
+  listPrice?: number; // Precio de lista original
 
   @IsNumber()
   cost: number;
