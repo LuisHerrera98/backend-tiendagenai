@@ -133,14 +133,14 @@ export class CategoryService {
               });
 
               return {
-                ...sub.toObject(),
+                ...sub,
                 productsCount: subProductsCount
               };
             })
           );
 
           return {
-            ...parent.toObject(),
+            ...parent,
             productsCount,
             subcategories: subcategoriesWithCount
           };
