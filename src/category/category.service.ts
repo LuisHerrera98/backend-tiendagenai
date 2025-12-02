@@ -42,7 +42,17 @@ export class CategoryService {
 
   async findAll(tenantId: string) {
     try {
-      const categories = await this.categoryModel.find({ tenantId }).sort({ order: 1, name: 1 });
+      // Ordenar: primero los que tienen orden > 0 (de menor a mayor), luego los sin orden (alfabéticamente)
+      const categories = await this.categoryModel.aggregate([
+        { $match: { tenantId } },
+        {
+          $addFields: {
+            hasOrder: { $cond: [{ $and: [{ $ne: ['$order', null] }, { $gt: ['$order', 0] }] }, 0, 1] }
+          }
+        },
+        { $sort: { hasOrder: 1, order: 1, name: 1 } },
+        { $project: { hasOrder: 0 } }
+      ]);
 
       // Agregar contador de productos por categoría
       const categoriesWithCount = await Promise.all(
@@ -53,7 +63,7 @@ export class CategoryService {
           });
 
           return {
-            ...category.toObject(),
+            ...category,
             productsCount
           };
         })
@@ -68,7 +78,17 @@ export class CategoryService {
   // Obtener árbol jerárquico para ecommerce público
   async findTree(tenantId: string) {
     try {
-      const allCategories = await this.categoryModel.find({ tenantId }).sort({ order: 1, name: 1 });
+      // Ordenar: primero los que tienen orden > 0 (de menor a mayor), luego los sin orden (alfabéticamente)
+      const allCategories = await this.categoryModel.aggregate([
+        { $match: { tenantId } },
+        {
+          $addFields: {
+            hasOrder: { $cond: [{ $and: [{ $ne: ['$order', null] }, { $gt: ['$order', 0] }] }, 0, 1] }
+          }
+        },
+        { $sort: { hasOrder: 1, order: 1, name: 1 } },
+        { $project: { hasOrder: 0 } }
+      ]);
 
       // Separar padres e hijos
       const parents = allCategories.filter(cat => !cat.parent_id);

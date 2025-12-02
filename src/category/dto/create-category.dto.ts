@@ -12,6 +12,6 @@ export class CreateCategoryDto {
 
   @IsOptional()
   @IsNumber()
-  @Min(0, { message: 'El orden debe ser mayor o igual a 0' })
+  @Min(1, { message: 'El orden debe ser mayor o igual a 1' })
   order?: number;
 }

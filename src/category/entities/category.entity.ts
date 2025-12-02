@@ -27,7 +27,7 @@ export class Category extends Document {
   @Prop({
     type: Number,
     required: false,
-    default: 0
+    default: null
   })
   order: number;
 
