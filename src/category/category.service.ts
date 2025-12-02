@@ -21,14 +21,33 @@ export class CategoryService {
 
   async create(tenantId: string, createCategoryDto: CreateCategoryDto) {
     try {
+      // Normalizar order: si es 0 o undefined, guardar como null
+      const order = createCategoryDto.order && createCategoryDto.order >= 1 ? createCategoryDto.order : null;
+
+      // Validar que el orden no esté duplicado (si se proporciona)
+      if (order) {
+        const existingWithOrder = await this.categoryModel.findOne({ tenantId, order });
+        if (existingWithOrder) {
+          throw new BadRequestException({
+            message: `Ya existe una categoría con el orden ${order}`,
+            error: 'DUPLICATE_ORDER',
+            statusCode: 400
+          });
+        }
+      }
+
       const categoryData = {
         ...createCategoryDto,
         name: createCategoryDto.name?.toUpperCase(),
+        order,
         tenantId
       };
       const category = await this.categoryModel.create(categoryData);
       return category;
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
       if (error.code === 11000) {
         throw new BadRequestException({
           message: 'Ya existe una categoría con ese nombre',
@@ -168,23 +187,43 @@ export class CategoryService {
 
   async update(tenantId: string, id: string, updateCategoryDto: UpdateCategoryDto) {
     try {
+      // Normalizar order: si es 0 o undefined, guardar como null
+      const order = updateCategoryDto.order && updateCategoryDto.order >= 1 ? updateCategoryDto.order : null;
+
+      // Validar que el orden no esté duplicado (si se proporciona y es diferente)
+      if (order) {
+        const existingWithOrder = await this.categoryModel.findOne({
+          tenantId,
+          order,
+          _id: { $ne: id } // Excluir la categoría actual
+        });
+        if (existingWithOrder) {
+          throw new BadRequestException({
+            message: `Ya existe una categoría con el orden ${order}`,
+            error: 'DUPLICATE_ORDER',
+            statusCode: 400
+          });
+        }
+      }
+
       const updateData = {
         ...updateCategoryDto,
-        name: updateCategoryDto.name?.toUpperCase()
+        name: updateCategoryDto.name?.toUpperCase(),
+        order
       };
       const category = await this.categoryModel.findOneAndUpdate(
         { _id: id, tenantId },
         updateData,
         { new: true }
       );
-      
+
       if (!category) {
         throw new NotFoundException('Categoría no encontrada');
       }
-      
+
       return category;
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       }
       if (error.code === 11000) {
