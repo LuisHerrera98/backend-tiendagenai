@@ -35,6 +35,11 @@ export class CreateProductDto {
   cashPrice: number;
 
   @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  transferPrice: number;
+
+  @IsOptional()
   images: any[];
 
   @IsOptional()

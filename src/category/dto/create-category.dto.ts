@@ -1,4 +1,4 @@
-import { IsString, MinLength, MaxLength, IsOptional } from 'class-validator';
+import { IsString, MinLength, MaxLength, IsOptional, IsNumber, Min } from 'class-validator';
 
 export class CreateCategoryDto {
   @IsString()
@@ -9,4 +9,9 @@ export class CreateCategoryDto {
   @IsOptional()
   @IsString()
   parent_id?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0, { message: 'El orden debe ser mayor o igual a 0' })
+  order?: number;
 }

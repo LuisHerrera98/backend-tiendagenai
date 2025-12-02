@@ -254,11 +254,12 @@ export class PublicService {
   async getStoreCategories(tenantId: string) {
     const categories = await this.categoryModel
       .find({ tenantId })
-      .sort({ name: 1 });
+      .sort({ order: 1, name: 1 });
 
     return categories.map(c => ({
       id: c._id.toString(),
       name: c.name,
+      order: (c as any).order || 0,
     }));
   }
 
@@ -266,7 +267,7 @@ export class PublicService {
     // Obtener todas las categorías
     const allCategories = await this.categoryModel
       .find({ tenantId })
-      .sort({ name: 1 })
+      .sort({ order: 1, name: 1 })
       .lean();
 
     // Separar padres e hijos
@@ -278,12 +279,14 @@ export class PublicService {
       id: parent._id.toString(),
       _id: parent._id.toString(),
       name: parent.name,
+      order: (parent as any).order || 0,
       subcategories: children
         .filter(child => child.parent_id?.toString() === parent._id.toString())
         .map(child => ({
           id: child._id.toString(),
           _id: child._id.toString(),
           name: child.name,
+          order: (child as any).order || 0,
         }))
     }));
   }

@@ -42,7 +42,7 @@ export class CategoryService {
 
   async findAll(tenantId: string) {
     try {
-      const categories = await this.categoryModel.find({ tenantId }).sort({ name: 1 });
+      const categories = await this.categoryModel.find({ tenantId }).sort({ order: 1, name: 1 });
 
       // Agregar contador de productos por categoría
       const categoriesWithCount = await Promise.all(
@@ -68,7 +68,7 @@ export class CategoryService {
   // Obtener árbol jerárquico para ecommerce público
   async findTree(tenantId: string) {
     try {
-      const allCategories = await this.categoryModel.find({ tenantId }).sort({ name: 1 });
+      const allCategories = await this.categoryModel.find({ tenantId }).sort({ order: 1, name: 1 });
 
       // Separar padres e hijos
       const parents = allCategories.filter(cat => !cat.parent_id);

@@ -51,6 +51,12 @@ export class Product extends Document{
 
     @Prop({
         unique: false,
+        required: false
+    })
+    transferPrice: number; // Precio por transferencia
+
+    @Prop({
+        unique: false,
         required: false,
         default: 25
     })

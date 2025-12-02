@@ -24,6 +24,13 @@ export class Category extends Document {
   })
   parent_id: string;
 
+  @Prop({
+    type: Number,
+    required: false,
+    default: 0
+  })
+  order: number;
+
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);
