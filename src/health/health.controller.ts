@@ -7,7 +7,7 @@ export class HealthController {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
-      service: 'TiendaGenAI backend2',
+      service: 'TiendaGenAI backend1',
       version: '1.0.0',
       uptime: process.uptime(),
       environment: process.env.NODE_ENV || 'development',
