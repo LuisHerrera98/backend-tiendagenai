@@ -45,47 +45,93 @@ export class ProductService {
     private readonly cloudinaryService: CloudinaryService
   ) {}
 
+  // Tipo para el modo de redondeo de precios
+  // 'psychological' = Múltiplo de $500 - 1 (ej: $159.999) - DEFAULT
+  // 'rounded' = Múltiplo de $500 (ej: $160.000)
+  // 'exact' = Sin redondear (números exactos)
+  private readonly DEFAULT_ROUNDING_MODE = 'psychological';
+
   // Obtener defaults de precios del tenant
   private async getTenantPriceDefaults(tenantId: string): Promise<{
     profitPercentage: number;
     cashDiscountPercentage: number;
     transferDiscountPercentage: number;
+    priceRoundingMode: 'psychological' | 'rounded' | 'exact';
   }> {
     const tenant = await this.tenantModel.findOne({ subdomain: tenantId });
     return {
       profitPercentage: tenant?.settings?.defaultProfitPercentage ?? 100,
       cashDiscountPercentage: tenant?.settings?.defaultCashDiscountPercentage ?? 25,
       transferDiscountPercentage: tenant?.settings?.defaultTransferDiscountPercentage ?? 10,
+      priceRoundingMode: (tenant?.settings?.priceRoundingMode as 'psychological' | 'rounded' | 'exact') ?? 'psychological',
     };
   }
 
-  // Función de redondeo psicológico (termina en 9)
-  private roundToPsychological(value: number): number {
-    const rounded = Math.round(value / 10) * 10;
-    return rounded - 1; // Ej: 15000 -> 14999, pero mejor 15000 -> 14990 -> 14999
+  // ============ FUNCIONES DE REDONDEO POR MODO ============
+
+  // Redondear precio LISTA según el modo
+  private roundListPrice(value: number, mode: 'psychological' | 'rounded' | 'exact'): number {
+    switch (mode) {
+      case 'psychological':
+        // Múltiplo de 500 más cercano - 1
+        const roundedPsych = Math.round(value / 500) * 500;
+        return roundedPsych > 0 ? roundedPsych - 1 : 0;
+      case 'rounded':
+        // Múltiplo de 500 más cercano
+        return Math.round(value / 500) * 500;
+      case 'exact':
+        // Sin redondear (entero)
+        return Math.round(value);
+      default:
+        return Math.round(value);
+    }
   }
 
-  // Calcular precios basado en costo y porcentajes
+  // Redondear precio DESCUENTO (efectivo/transferencia) según el modo
+  private roundDiscountPrice(value: number, mode: 'psychological' | 'rounded' | 'exact'): number {
+    switch (mode) {
+      case 'psychological':
+        // Múltiplo de 500 hacia abajo - 1
+        const roundedPsych = Math.floor(value / 500) * 500;
+        return roundedPsych > 0 ? roundedPsych - 1 : 0;
+      case 'rounded':
+        // Múltiplo de 500 hacia abajo
+        return Math.floor(value / 500) * 500;
+      case 'exact':
+        // Sin redondear (entero)
+        return Math.round(value);
+      default:
+        return Math.round(value);
+    }
+  }
+
+  // Calcular precios basado en costo, porcentajes y modo de redondeo
   calculatePrices(
     cost: number,
     profitPercentage: number,
     cashDiscountPercentage: number,
     transferDiscountPercentage: number,
-    discount: number = 0
+    discount: number = 0,
+    roundingMode: 'psychological' | 'rounded' | 'exact' = 'psychological'
   ): { price: number; cashPrice: number; transferPrice: number } {
     // 1. Precio Lista = Costo × (1 + ganancia%)
-    const priceBeforeDiscount = Math.round(cost * (1 + profitPercentage / 100));
+    const rawPrice = cost * (1 + profitPercentage / 100);
+    const priceBeforeDiscount = this.roundListPrice(rawPrice, roundingMode);
 
     // 2. Si hay descuento de liquidación, aplicarlo al precio lista
     const price = discount > 0
-      ? Math.round(priceBeforeDiscount * (1 - discount / 100))
+      ? this.roundListPrice(priceBeforeDiscount * (1 - discount / 100), roundingMode)
       : priceBeforeDiscount;
 
     // 3. Precio Efectivo = Precio Lista × (1 - descuento efectivo%)
-    const cashPrice = Math.round(price * (1 - cashDiscountPercentage / 100));
+    // Para modos con -1, sumar 1 al precio para calcular sobre número redondo
+    const priceForDiscount = roundingMode === 'psychological' ? price + 1 : price;
+    const rawCashPrice = priceForDiscount * (1 - cashDiscountPercentage / 100);
+    const cashPrice = this.roundDiscountPrice(rawCashPrice, roundingMode);
 
     // 4. Precio Transferencia = Precio Lista × (1 - descuento transferencia%)
-    const transferPrice = Math.round(price * (1 - transferDiscountPercentage / 100));
+    const rawTransferPrice = priceForDiscount * (1 - transferDiscountPercentage / 100);
+    const transferPrice = this.roundDiscountPrice(rawTransferPrice, roundingMode);
 
     return { price, cashPrice, transferPrice };
   }

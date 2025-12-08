@@ -69,6 +69,11 @@ export class Tenant {
     defaultProfitPercentage?: number; // Default: 100 (duplicar el costo)
     defaultCashDiscountPercentage?: number; // Default: 25
     defaultTransferDiscountPercentage?: number; // Default: 10
+    // Modo de redondeo de precios:
+    // 'psychological' = Múltiplo de $500 - 1 (ej: $159.999) - DEFAULT
+    // 'rounded' = Múltiplo de $500 (ej: $160.000)
+    // 'exact' = Sin redondear (números exactos)
+    priceRoundingMode?: 'psychological' | 'rounded' | 'exact';
   };
 
   @Prop({ type: Object })
