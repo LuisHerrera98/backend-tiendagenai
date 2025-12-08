@@ -65,6 +65,10 @@ export class Tenant {
     freeShippingEnabled?: boolean;
     freeShippingMinAmount?: number;
     freeShippingText?: string;
+    // Defaults de precios para nuevos productos
+    defaultProfitPercentage?: number; // Default: 100 (duplicar el costo)
+    defaultCashDiscountPercentage?: number; // Default: 25
+    defaultTransferDiscountPercentage?: number; // Default: 10
   };
 
   @Prop({ type: Object })

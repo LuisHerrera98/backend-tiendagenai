@@ -58,9 +58,23 @@ export class Product extends Document{
     @Prop({
         unique: false,
         required: false,
+        default: 100
+    })
+    profitPercentage: number; // Porcentaje de ganancia sobre costo para calcular precio lista
+
+    @Prop({
+        unique: false,
+        required: false,
         default: 25
     })
-    listPricePercentage: number; // Porcentaje para calcular precio de lista desde precio efectivo
+    cashDiscountPercentage: number; // Porcentaje de descuento para precio efectivo
+
+    @Prop({
+        unique: false,
+        required: false,
+        default: 10
+    })
+    transferDiscountPercentage: number; // Porcentaje de descuento para precio transferencia
 
     @Prop({
         unique: false,

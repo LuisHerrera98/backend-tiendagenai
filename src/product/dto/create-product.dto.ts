@@ -25,19 +25,35 @@ export class CreateProductDto {
   @IsNumber()
   cost: number;
 
+  @IsOptional()
   @Transform(({ value }) => Number(value))
   @IsNumber()
-  price: number;
+  price: number; // Precio lista - calculado o manual
 
   @IsOptional()
   @Transform(({ value }) => Number(value))
   @IsNumber()
-  cashPrice: number;
+  cashPrice: number; // Precio efectivo - calculado o manual
 
   @IsOptional()
   @Transform(({ value }) => Number(value))
   @IsNumber()
-  transferPrice: number;
+  transferPrice: number; // Precio transferencia - calculado o manual
+
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  profitPercentage: number; // % ganancia sobre costo
+
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  cashDiscountPercentage: number; // % descuento efectivo
+
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  transferDiscountPercentage: number; // % descuento transferencia
 
   @IsOptional()
   images: any[];

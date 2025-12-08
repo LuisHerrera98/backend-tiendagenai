@@ -237,4 +237,43 @@ export class ProductController {
   ) {
     return this.productService.deleteProductImage(tenantId, productId, imageUrl);
   }
+
+  // Endpoints para aumento masivo de costos
+  @Get('bulk-update/products')
+  @RequirePermissions(Permission.PRODUCTS_EDIT)
+  async getProductsForBulkUpdate(
+    @TenantId() tenantId: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('search') search?: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 50,
+  ) {
+    return this.productService.getProductsForBulkUpdate(tenantId, categoryId, search, page, limit);
+  }
+
+  @Post('bulk-update/preview')
+  @RequirePermissions(Permission.PRODUCTS_EDIT)
+  async previewBulkUpdate(
+    @TenantId() tenantId: string,
+    @Body() body: { productIds: string[]; increasePercentage: number },
+  ) {
+    return this.productService.previewBulkUpdate(
+      tenantId,
+      body.productIds,
+      body.increasePercentage,
+    );
+  }
+
+  @Post('bulk-update/apply')
+  @RequirePermissions(Permission.PRODUCTS_EDIT)
+  async bulkUpdateCosts(
+    @TenantId() tenantId: string,
+    @Body() body: { productIds: string[]; increasePercentage: number },
+  ) {
+    return this.productService.bulkUpdateCosts(
+      tenantId,
+      body.productIds,
+      body.increasePercentage,
+    );
+  }
 }
