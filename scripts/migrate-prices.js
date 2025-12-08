@@ -4,7 +4,7 @@
  * Este script:
  * 1. Elimina el campo obsoleto `listPricePercentage`
  * 2. Calcula los nuevos campos de porcentajes (ENTEROS):
- *    - profitPercentage: 113% (ganancia sobre costo para precio lista)
+ *    - profitPercentage: 122% (ganancia sobre costo para precio lista)
  *    - cashDiscountPercentage: 25% (descuento para efectivo)
  *    - transferDiscountPercentage: 25% (descuento para transferencia)
  * 3. Recalcula los precios con redondeo psicológico (modo por defecto):
@@ -28,11 +28,11 @@
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ecommerce';
+const MONGODB_URI ='mongodb://admin:GenaiFB2025!@54.94.243.68:27017/tiendagenai?authSource=admin';
 
 // Configuración de porcentajes (ENTEROS, sin decimales)
 const CONFIG = {
-  profitPercentage: 113,              // % ganancia sobre costo (entero)
+  profitPercentage: 122,              // % ganancia sobre costo (entero)
   cashDiscountPercentage: 25,          // % descuento efectivo
   transferDiscountPercentage: 25,      // % descuento transferencia
 };

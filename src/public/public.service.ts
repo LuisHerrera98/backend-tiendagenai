@@ -88,6 +88,7 @@ export class PublicService {
       gender?: string;
       sizes?: string[];
       colors?: string[];
+      search?: string;
       limit: number;
       page: number;
     },
@@ -96,6 +97,17 @@ export class PublicService {
       tenantId,
       active: true
     };
+
+    // Búsqueda por texto (nombre, marca, modelo, código)
+    if (filters.search) {
+      const searchRegex = new RegExp(filters.search, 'i');
+      query.$or = [
+        { name: searchRegex },
+        { brand_name: searchRegex },
+        { model_name: searchRegex },
+        { code: searchRegex },
+      ];
+    }
 
     if (filters.category) {
       // Buscar subcategorías de esta categoría
