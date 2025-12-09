@@ -44,7 +44,7 @@ export class ModeloService {
 
       const modeloData = {
         ...createModeloDto,
-        name: createModeloDto.name?.trim(),
+        name: createModeloDto.name?.trim().toUpperCase(),
         tenantId,
       };
 
@@ -179,7 +179,7 @@ export class ModeloService {
 
       const updateData = {
         ...updateModeloDto,
-        name: updateModeloDto.name?.trim(),
+        name: updateModeloDto.name?.trim().toUpperCase(),
       };
 
       const modelo = await this.modeloModel.findOneAndUpdate(
