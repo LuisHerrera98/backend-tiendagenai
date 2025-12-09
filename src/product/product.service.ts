@@ -9,6 +9,7 @@ import { Type } from '../type/entities/type.entity';
 import { Gender } from '../gender/entities/gender.entity';
 import { Category } from '../category/entities/category.entity';
 import { Tenant } from '../tenant/entities/tenant.entity';
+import { Modelo } from '../modelo/entities/modelo.entity';
 import { Model, ObjectId } from 'mongoose';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
@@ -42,6 +43,8 @@ export class ProductService {
     private readonly categoryModel: Model<Category>,
     @InjectModel(Tenant.name)
     private readonly tenantModel: Model<Tenant>,
+    @InjectModel(Modelo.name)
+    private readonly modeloModel: Model<Modelo>,
     private readonly cloudinaryService: CloudinaryService
   ) {}
 
@@ -293,6 +296,18 @@ export class ProductService {
         })) || [];
       }
 
+      // Obtener nombre del modelo si se proporciona modelo_id
+      let modeloName: string | undefined;
+      if (createProductDto.modelo_id) {
+        const modelo = await this.modeloModel.findOne({
+          _id: createProductDto.modelo_id,
+          tenantId
+        });
+        if (modelo) {
+          modeloName = modelo.name;
+        }
+      }
+
       const productData = {
         ...createProductDto,
         tenantId,
@@ -312,7 +327,9 @@ export class ProductService {
         cashDiscountPercentage: finalCashDiscountPercentage,
         transferDiscountPercentage: finalTransferDiscountPercentage,
         discount,
-        gender: undefined
+        gender: undefined,
+        // Modelo desnormalizado
+        modelo_name: modeloName
       };
 
       const product = await this.productModel.create(productData);
@@ -337,7 +354,8 @@ export class ProductService {
       name, price, cost, cashPrice, transferPrice, stock, stockType, active,
       type_id, brand_id, category_id, images, discount, gender_id, genders,
       color_id, description, installmentText, withoutStock,
-      profitPercentage, cashDiscountPercentage, transferDiscountPercentage
+      profitPercentage, cashDiscountPercentage, transferDiscountPercentage,
+      modelo_id
     } = updateProductDto;
 
     const update: any = {};
@@ -521,6 +539,25 @@ export class ProductService {
         }
         return img;
       });
+    }
+
+    // Manejar modelo_id
+    if (modelo_id !== undefined) {
+      if (modelo_id === '' || modelo_id === null) {
+        // Si se envía vacío, limpiar el modelo
+        update.modelo_id = null;
+        update.modelo_name = null;
+      } else {
+        // Obtener el nombre del modelo
+        const modelo = await this.modeloModel.findOne({
+          _id: modelo_id,
+          tenantId
+        });
+        if (modelo) {
+          update.modelo_id = modelo_id;
+          update.modelo_name = modelo.name;
+        }
+      }
     }
 
     return this.productModel.findOneAndUpdate(

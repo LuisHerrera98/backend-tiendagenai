@@ -23,6 +23,7 @@ import { OrderModule } from './order/order.module';
 import { PaymentModule } from './payment/payment.module';
 import { EmailModule } from './email/email.module';
 import { FacebookMarketplaceModule } from './facebook-marketplace/facebook-marketplace.module';
+import { ModeloModule } from './modelo/modelo.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { FacebookMarketplaceModule } from './facebook-marketplace/facebook-marke
     PaymentModule,
     EmailModule,
     FacebookMarketplaceModule,
+    ModeloModule,
   ],
   controllers: [],
   providers: [],

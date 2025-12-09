@@ -103,4 +103,8 @@ export class CreateProductDto {
   @IsOptional()
   @IsBoolean()
   withoutStock: boolean;
+
+  @IsOptional()
+  @IsString()
+  modelo_id: string; // ID del modelo (ej: "Jordan", "Yeezy")
 }

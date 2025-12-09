@@ -169,6 +169,17 @@ export class Product extends Document{
 
     @Prop({
         required: false,
+        index: true
+    })
+    modelo_id: string; // ID del modelo (ej: "Jordan", "Yeezy", "Air Max")
+
+    @Prop({
+        required: false
+    })
+    modelo_name: string; // Nombre del modelo desnormalizado para búsquedas
+
+    @Prop({
+        required: false,
         type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Gender' }],
         default: []
     })

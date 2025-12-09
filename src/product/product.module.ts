@@ -9,6 +9,7 @@ import { Type, TypeSchema } from '../type/entities/type.entity';
 import { Gender, GenderSchema } from '../gender/entities/gender.entity';
 import { Category, CategorySchema } from '../category/entities/category.entity';
 import { Tenant, TenantSchema } from '../tenant/entities/tenant.entity';
+import { Modelo, ModeloSchema } from '../modelo/entities/modelo.entity';
 import { FileModule } from 'src/file/file.module';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 
@@ -21,7 +22,8 @@ import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
       { name: Type.name, schema: TypeSchema },
       { name: Gender.name, schema: GenderSchema },
       { name: Category.name, schema: CategorySchema },
-      { name: Tenant.name, schema: TenantSchema }
+      { name: Tenant.name, schema: TenantSchema },
+      { name: Modelo.name, schema: ModeloSchema }
     ]),
     FileModule,
     CloudinaryModule

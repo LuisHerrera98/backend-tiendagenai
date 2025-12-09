@@ -89,6 +89,7 @@ export class PublicService {
       sizes?: string[];
       colors?: string[];
       search?: string;
+      modelo?: string;
       limit: number;
       page: number;
     },
@@ -105,8 +106,15 @@ export class PublicService {
         { name: searchRegex },
         { brand_name: searchRegex },
         { model_name: searchRegex },
+        { modelo_name: searchRegex },
         { code: searchRegex },
       ];
+    }
+
+    // Filtro por modelo (puede ser id o nombre)
+    if (filters.modelo) {
+      // Intentar buscar por modelo_name primero (case-insensitive)
+      query.modelo_name = new RegExp(`^${filters.modelo}$`, 'i');
     }
 
     if (filters.category) {
@@ -347,23 +355,29 @@ export class PublicService {
   async getStoreFiltersByCategory(tenantId: string, categoryId: string) {
     // Obtener productos de la categoría específica
     const products = await this.productModel
-      .find({ 
-        tenantId, 
-        category_id: categoryId, 
-        active: true 
+      .find({
+        tenantId,
+        category_id: categoryId,
+        active: true
       })
       .populate('stock.size_id', 'name')
-      .select('brand_name color_id stock');
+      .select('brand_name color_id stock modelo_id modelo_name');
 
     // Extraer marcas únicas
     const brandsSet = new Set<string>();
     const colorsSet = new Set<string>();
+    const modelosMap = new Map<string, string>(); // id -> name
     const sizesMap = new Map<string, string>();
 
     products.forEach(product => {
       // Marcas
       if (product.brand_name) {
         brandsSet.add(product.brand_name);
+      }
+
+      // Modelos (usando modelo_id y modelo_name)
+      if (product.modelo_id && product.modelo_name) {
+        modelosMap.set(product.modelo_id, product.modelo_name);
       }
 
       // Colores
@@ -396,13 +410,17 @@ export class PublicService {
     return {
       sizes: Array.from(sizesMap.entries()).map(([id, name]) => ({ id, name }))
         .sort((a, b) => a.name.localeCompare(b.name)),
-      colors: colors.map(c => ({ 
-        id: c._id.toString(), 
-        name: c.name 
+      colors: colors.map(c => ({
+        id: c._id.toString(),
+        name: c.name
       })).sort((a, b) => a.name.localeCompare(b.name)),
-      brands: Array.from(brandsSet).map(name => ({ 
-        id: name.toLowerCase().replace(/\s+/g, '-'), 
-        name 
+      brands: Array.from(brandsSet).map(name => ({
+        id: name.toLowerCase().replace(/\s+/g, '-'),
+        name
+      })).sort((a, b) => a.name.localeCompare(b.name)),
+      modelos: Array.from(modelosMap.entries()).map(([id, name]) => ({
+        id,
+        name
       })).sort((a, b) => a.name.localeCompare(b.name))
     };
   }

@@ -35,6 +35,7 @@ export class PublicController {
     @Query('sizes') sizes?: string,
     @Query('colors') colors?: string,
     @Query('search') search?: string,
+    @Query('modelo') modelo?: string,
     @Query('limit') limit?: string,
     @Query('page') page?: string,
   ) {
@@ -52,6 +53,7 @@ export class PublicController {
       sizes: sizes ? sizes.split(',') : [],
       colors: colors ? colors.split(',') : [],
       search: search?.trim(),
+      modelo: modelo?.trim(),
       limit: limit ? parseInt(limit) : 20,
       page: page ? parseInt(page) : 1,
     });
